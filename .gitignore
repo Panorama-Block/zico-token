@@ -1,11 +1,11 @@
 # Compiler files
-cache/
-out/
+contracts/cache/
+contracts/out/
 
 # Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+!/contracts/broadcast
+/contracts/broadcast/*/31337/
+/contracts/broadcast/**/dry-run/
 
 # Docs
 docs/
@@ -13,5 +13,10 @@ docs/
 # Dotenv file
 .env
 
+# Node modules
 node_modules/
 package-lock.json
+
+# Frontend build
+frontend/build/
+frontend/dist/

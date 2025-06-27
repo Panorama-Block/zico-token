@@ -13,7 +13,9 @@ echo "✅ Environment file created"
 
 # Build do contrato
 echo "🔨 Building smart contract..."
+cd contracts
 forge build
+cd ..
 
 # Setup do frontend
 echo "🌐 Setting up frontend..."
@@ -27,7 +29,7 @@ echo "Terminal 1 - Start local blockchain:"
 echo "anvil"
 echo ""
 echo "Terminal 2 - Deploy contract:"
-echo "forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast"
+echo "cd contracts && forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast"
 echo ""
 echo "Terminal 3 - Start frontend:"
 echo "cd frontend && npm start"
