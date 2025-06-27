@@ -8,8 +8,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
+import {FunctionsClient} from "../lib/chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
+import {FunctionsRequest} from "../lib/chainlink/contracts/src/v0.8/functions/v1_0_0/libraries/FunctionsRequest.sol";
 
-contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
+contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     mapping(uint64 => address) public remotes;
     address public immutable linkToken;
     IRouterClient private router;
@@ -29,10 +31,17 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
     mapping(uint256 => uint256) public requestIdToReward;
 
     address public treasuryVault;
-    uint16 public crossChainFeeBps = 50; // 0.5% (50 basis points)
-    uint16 public constant MAX_FEE_BPS = 1000; // 10%
+    uint16 public crossChainFeeBps = 50; 
+    uint16 public constant MAX_FEE_BPS = 1000; 
 
     address public timelock;
+
+    // Chainlink Functions config
+    uint64 public functionsSubscriptionId;
+    bytes32 public functionsDonId;
+    uint32 public functionsCallbackGasLimit = 100000;
+    uint256 public aprStaking; // Exemplo: APR dinâmica ajustada via Chainlink Functions
+    event APRUpdated(uint256 newApr);
 
     modifier onlyTimelock() {
         require(msg.sender == timelock, "Not timelock");
@@ -49,10 +58,19 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
     event TreasuryVaultUpdated(address indexed newVault);
     event CrossChainFeeUpdated(uint16 newFeeBps);
 
-    constructor(address _router, address _linkToken, address vrfCoordinator, bytes32 _keyHash, uint64 _subscriptionId, address _timelock)
-        ERC20("Zico Token", "ZICO")
+    constructor(
+        address _router,
+        address _linkToken,
+        address vrfCoordinator,
+        bytes32 _keyHash,
+        uint64 _subscriptionId,
+        address _timelock,
+        address _functionsRouter
+    )
+        ERC20("ZICOAI", "ZICOAI")
         CCIPReceiver(_router)
         VRFConsumerBaseV2(vrfCoordinator)
+        FunctionsClient(_functionsRouter)
     {
         router = IRouterClient(_router);
         linkToken = _linkToken;
@@ -120,9 +138,7 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
         uint256 netAmount = amount - feeAmount;
         require(netAmount > 0, "Net amount must be > 0");
 
-        // Transfere a taxa para o TreasuryVault
         _transfer(msg.sender, treasuryVault, feeAmount);
-        // Queima apenas o valor líquido
         _burn(msg.sender, netAmount);
 
         bytes memory data = abi.encode(msg.sender, netAmount);
@@ -192,5 +208,30 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
         require(_feeBps <= MAX_FEE_BPS, "Fee too high");
         crossChainFeeBps = _feeBps;
         emit CrossChainFeeUpdated(_feeBps);
+    }
+
+    function setFunctionsConfig(uint64 _subId, bytes32 _donId, uint32 _callbackGas) external onlyTimelock {
+        functionsSubscriptionId = _subId;
+        functionsDonId = _donId;
+        functionsCallbackGasLimit = _callbackGas;
+    }
+
+    using FunctionsRequest for FunctionsRequest.Request;
+
+    function requestAprUpdate(string calldata source, string[] calldata args) external onlyTimelock returns (bytes32) {
+        FunctionsRequest.Request memory req;
+        req.initializeRequestForInlineJavaScript(source);
+        if (args.length > 0) {
+            req.setArgs(args);
+        }
+        bytes memory requestData = FunctionsRequest.encodeCBOR(req);
+        return _sendRequest(requestData, functionsSubscriptionId, functionsCallbackGasLimit, functionsDonId);
+    }
+
+    function fulfillRequest(bytes32, bytes memory response, bytes memory err) internal override {
+        require(err.length == 0, "Chainlink Functions error");
+        uint256 newApr = abi.decode(response, (uint256));
+        aprStaking = newApr;
+        emit APRUpdated(newApr);
     }
 }
