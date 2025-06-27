@@ -46,14 +46,32 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     event PremiumServiceFeeSet(bytes32 indexed serviceId, uint256 fee);
     event PremiumServicePaid(address indexed user, bytes32 indexed serviceId, uint256 fee);
 
+    // Integração com staking shares
+    address public stakingContract;
+    event StakingContractSet(address indexed stakingContract);
+
+    // Pausa automática
+    bool public paused;
+    event Paused();
+    event Unpaused();
+    address public proofOfReserve;
+    event ProofOfReserveSet(address indexed proofOfReserve);
+
+    IERC20 public zicoToken;
+
     modifier onlyTimelock() {
         require(msg.sender == timelock, "Not timelock");
         _;
     }
 
+    modifier whenNotPaused() {
+        require(!paused, "Paused");
+        _;
+    }
+
     event CrossChainSend(uint64 indexed toChain, address indexed to, uint256 amount);
     event CrossChainReceive(address indexed to, uint256 amount);
-    event Staked(address indexed user, uint256 amount);
+    event Staked(address indexed user, uint256 amount, uint256 sharesMinted);
     event Unstaked(address indexed user, uint256 amount);
     event RewardDistributed(address indexed user, uint256 reward);
     event RandomRewardRequested(uint256 requestId, uint256 rewardAmount);
@@ -68,7 +86,8 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         bytes32 _keyHash,
         uint64 _subscriptionId,
         address _timelock,
-        address _functionsRouter
+        address _functionsRouter,
+        address _zicoToken
     )
         ERC20("ZICOAI", "ZICOAI")
         CCIPReceiver(_router)
@@ -81,6 +100,7 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         keyHash = _keyHash;
         subscriptionId = _subscriptionId;
         timelock = _timelock;
+        zicoToken = IERC20(_zicoToken);
         _mint(msg.sender, 1_000_000_000 ether);
     }
 
@@ -89,25 +109,34 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         timelock = newTimelock;
     }
 
-    function stake(uint256 amount) external {
-        require(amount > 0, "Cannot stake 0");
-        _transfer(msg.sender, address(this), amount);
-
-        if (stakes[msg.sender] == 0) {
-            stakerList.push(msg.sender);
+    function stake(uint256 zicoAmount) external whenNotPaused returns (uint256 sharesMinted) {
+        require(zicoAmount > 0, "Cannot stake 0");
+        uint256 totalZico = zicoTokenBalance();
+        uint256 totalShares = totalSupply();
+        if (totalShares == 0 || totalZico == 0) {
+            sharesMinted = zicoAmount;
+        } else {
+            sharesMinted = (zicoAmount * totalShares) / totalZico;
         }
-
-        stakes[msg.sender] += amount;
-        totalStaked += amount;
-        emit Staked(msg.sender, amount);
+        require(sharesMinted > 0, "Zero shares");
+        require(zicoToken.transferFrom(msg.sender, address(this), zicoAmount), "Transfer failed");
+        _mint(msg.sender, sharesMinted);
+        emit Staked(msg.sender, zicoAmount, sharesMinted);
     }
 
-    function unstake(uint256 amount) external {
-        require(amount > 0 && amount <= stakes[msg.sender], "Invalid unstake");
-        stakes[msg.sender] -= amount;
-        totalStaked -= amount;
-        _transfer(address(this), msg.sender, amount);
-        emit Unstaked(msg.sender, amount);
+    function unstake(uint256 shareAmount) external whenNotPaused returns (uint256 zicoReturned) {
+        require(shareAmount > 0 && shareAmount <= balanceOf(msg.sender), "Invalid amount");
+        uint256 totalShares = totalSupply();
+        uint256 totalZico = zicoTokenBalance();
+        zicoReturned = (shareAmount * totalZico) / totalShares;
+        require(zicoReturned > 0, "Zero ZICO");
+        _burn(msg.sender, shareAmount);
+        require(zicoToken.transfer(msg.sender, zicoReturned), "Transfer failed");
+        emit Unstaked(msg.sender, shareAmount);
+    }
+
+    function zicoTokenBalance() public view returns (uint256) {
+        return IERC20(address(zicoToken)).balanceOf(address(this));
     }
 
     function distributeRewards() external onlyTimelock {
@@ -130,7 +159,7 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         _transfer(address(this), msg.sender, reward);
     }
 
-    function sendCrossChain(uint64 destChain, uint256 amount) external {
+    function sendCrossChain(uint64 destChain, uint256 amount) external whenNotPaused {
         address remote = remotes[destChain];
         require(remote != address(0), "Unknown destination");
         require(treasuryVault != address(0), "TreasuryVault not set");
@@ -247,11 +276,57 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         emit PremiumServiceFeeSet(serviceId, fee);
     }
 
-    function payPremiumService(bytes32 serviceId) external {
+    // Exemplo: exigir 1000 shares para acessar serviços premium
+    uint256 public constant PREMIUM_SERVICE_MIN_SHARES = 1000 ether;
+    function payPremiumService(bytes32 serviceId) external onlyStakingLevel(PREMIUM_SERVICE_MIN_SHARES) whenNotPaused {
         uint256 fee = premiumServiceFees[serviceId];
         require(fee > 0, "Service not available");
         require(treasuryVault != address(0), "TreasuryVault not set");
         _transfer(msg.sender, treasuryVault, fee);
         emit PremiumServicePaid(msg.sender, serviceId, fee);
+    }
+
+    function setStakingContract(address _stakingContract) external onlyTimelock {
+        require(_stakingContract != address(0), "Zero address");
+        stakingContract = _stakingContract;
+        emit StakingContractSet(_stakingContract);
+    }
+
+    function hasStakingLevel(address user, uint256 minShares) public view returns (bool) {
+        if (stakingContract == address(0)) return false;
+        return IERC20(stakingContract).balanceOf(user) >= minShares;
+    }
+
+    modifier onlyStakingLevel(uint256 minShares) {
+        require(hasStakingLevel(msg.sender, minShares), "Insufficient staking level");
+        _;
+    }
+
+    function pause() external onlyTimelock {
+        paused = true;
+        emit Paused();
+    }
+
+    function unpause() external onlyTimelock {
+        paused = false;
+        emit Unpaused();
+    }
+
+    function setProofOfReserve(address _proofOfReserve) external onlyTimelock {
+        require(_proofOfReserve != address(0), "Zero address");
+        proofOfReserve = _proofOfReserve;
+        emit ProofOfReserveSet(_proofOfReserve);
+    }
+
+    // Função para Chainlink Functions pausar automaticamente se supplyOK for falso
+    function autoPauseIfUnhealthy() external {
+        require(proofOfReserve != address(0), "ProofOfReserve not set");
+        (bool success, bytes memory data) = proofOfReserve.staticcall(abi.encodeWithSignature("isSupplyHealthy()"));
+        require(success, "ProofOfReserve call failed");
+        bool supplyOK = abi.decode(data, (bool));
+        if (!supplyOK && !paused) {
+            paused = true;
+            emit Paused();
+        }
     }
 }
