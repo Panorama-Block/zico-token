@@ -10,7 +10,7 @@ contract ZICOStaking is ERC20, Ownable {
     mapping(address => uint256) public rewards;
 
     constructor() ERC20("ZICOAI", "ZICOAI") Ownable(msg.sender) {
-        _mint(msg.sender, 1_000_000 ether);
+        _mint(msg.sender, 1_000_000_000 ether);
     }
 
     function stake(uint256 amount) external {
