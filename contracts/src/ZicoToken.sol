@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
 
-contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
+contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2 {
     mapping(uint64 => address) public remotes;
     address public immutable linkToken;
     IRouterClient private router;
@@ -28,6 +28,17 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
 
     mapping(uint256 => uint256) public requestIdToReward;
 
+    address public treasuryVault;
+    uint16 public crossChainFeeBps = 50; // 0.5% (50 basis points)
+    uint16 public constant MAX_FEE_BPS = 1000; // 10%
+
+    address public timelock;
+
+    modifier onlyTimelock() {
+        require(msg.sender == timelock, "Not timelock");
+        _;
+    }
+
     event CrossChainSend(uint64 indexed toChain, address indexed to, uint256 amount);
     event CrossChainReceive(address indexed to, uint256 amount);
     event Staked(address indexed user, uint256 amount);
@@ -35,11 +46,12 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
     event RewardDistributed(address indexed user, uint256 reward);
     event RandomRewardRequested(uint256 requestId, uint256 rewardAmount);
     event RandomRewardGranted(address indexed winner, uint256 rewardAmount);
+    event TreasuryVaultUpdated(address indexed newVault);
+    event CrossChainFeeUpdated(uint16 newFeeBps);
 
-    constructor(address _router, address _linkToken, address vrfCoordinator, bytes32 _keyHash, uint64 _subscriptionId)
+    constructor(address _router, address _linkToken, address vrfCoordinator, bytes32 _keyHash, uint64 _subscriptionId, address _timelock)
         ERC20("Zico Token", "ZICO")
         CCIPReceiver(_router)
-        Ownable(msg.sender)
         VRFConsumerBaseV2(vrfCoordinator)
     {
         router = IRouterClient(_router);
@@ -47,8 +59,13 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         keyHash = _keyHash;
         subscriptionId = _subscriptionId;
-
+        timelock = _timelock;
         _mint(msg.sender, 1_000_000_000 ether);
+    }
+
+    function transferTimelock(address newTimelock) external onlyTimelock {
+        require(newTimelock != address(0), "Zero address");
+        timelock = newTimelock;
     }
 
     function stake(uint256 amount) external {
@@ -72,7 +89,7 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         emit Unstaked(msg.sender, amount);
     }
 
-    function distributeRewards() external onlyOwner {
+    function distributeRewards() external onlyTimelock {
         uint256 rewardPool = balanceOf(address(this)) / 100;
         address[] memory stakers = getAllStakers();
         for (uint256 i = 0; i < stakers.length; i++) {
@@ -95,12 +112,21 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
     function sendCrossChain(uint64 destChain, uint256 amount) external {
         address remote = remotes[destChain];
         require(remote != address(0), "Unknown destination");
+        require(treasuryVault != address(0), "TreasuryVault not set");
+        require(amount > 0, "Amount must be > 0");
 
-        _burn(msg.sender, amount);
-        bytes memory data = abi.encode(msg.sender, amount);
+        // Calcula a taxa
+        uint256 feeAmount = (amount * crossChainFeeBps) / 10000;
+        uint256 netAmount = amount - feeAmount;
+        require(netAmount > 0, "Net amount must be > 0");
 
+        // Transfere a taxa para o TreasuryVault
+        _transfer(msg.sender, treasuryVault, feeAmount);
+        // Queima apenas o valor líquido
+        _burn(msg.sender, netAmount);
+
+        bytes memory data = abi.encode(msg.sender, netAmount);
         Client.EVMTokenAmount[] memory emptyTokenAmounts;
-
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(remote),
             data: data,
@@ -108,15 +134,12 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
             extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000})),
             feeToken: linkToken
         });
-
         uint256 fee = router.getFee(destChain, message);
         require(IERC20(linkToken).allowance(msg.sender, address(this)) >= fee, "Insufficient LINK allowance");
-
         IERC20(linkToken).transferFrom(msg.sender, address(this), fee);
         IERC20(linkToken).approve(address(router), fee);
-
         router.ccipSend(destChain, message);
-        emit CrossChainSend(destChain, msg.sender, amount);
+        emit CrossChainSend(destChain, msg.sender, netAmount);
     }
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override onlyRouter {
@@ -129,7 +152,7 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         return stakerList;
     }
 
-    function requestRandomReward(uint256 rewardAmount) external onlyOwner {
+    function requestRandomReward(uint256 rewardAmount) external onlyTimelock {
         require(stakerList.length > 0, "No stakers to reward");
         require(rewardAmount > 0 && rewardAmount <= balanceOf(address(this)), "Invalid reward amount");
 
@@ -155,7 +178,19 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         emit RandomRewardGranted(winner, rewardAmount);
     }
 
-    function setRemote(uint64 chainId, address remoteAddress) external onlyOwner {
+    function setRemote(uint64 chainId, address remoteAddress) external onlyTimelock {
         remotes[chainId] = remoteAddress;
+    }
+
+    function setTreasuryVault(address _treasuryVault) external onlyTimelock {
+        require(_treasuryVault != address(0), "Zero address");
+        treasuryVault = _treasuryVault;
+        emit TreasuryVaultUpdated(_treasuryVault);
+    }
+
+    function setCrossChainFeeBps(uint16 _feeBps) external onlyTimelock {
+        require(_feeBps <= MAX_FEE_BPS, "Fee too high");
+        crossChainFeeBps = _feeBps;
+        emit CrossChainFeeUpdated(_feeBps);
     }
 }

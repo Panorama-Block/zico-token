@@ -3,12 +3,13 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/governance/TimelockController.sol";
 
 interface IRewardManager {
     function updateReward(address user, uint256 rewardPool) external;
 }
 
-contract TreasuryVault is Ownable {
+contract TreasuryVault {
     IERC20 public immutable zicoToken;
     IERC20 public immutable linkToken;
     IRewardManager public rewardManager;
@@ -19,14 +20,29 @@ contract TreasuryVault is Ownable {
     event FeeReceived(address indexed payer, uint256 zicoAmount, uint256 linkAmount);
     event Harvested(uint256 zicoAmount, uint256 linkAmount);
     event RewardManagerSet(address rewardManager);
+    event TimelockTransferred(address indexed newTimelock);
 
-    constructor(address _zicoToken, address _linkToken) Ownable(msg.sender) {
-        require(_zicoToken != address(0) && _linkToken != address(0), "Zero address");
-        zicoToken = IERC20(_zicoToken);
-        linkToken = IERC20(_linkToken);
+    address public timelock;
+
+    modifier onlyTimelock() {
+        require(msg.sender == timelock, "Not timelock");
+        _;
     }
 
-    function setRewardManager(address _rewardManager) external onlyOwner {
+    constructor(address _zicoToken, address _linkToken, address _timelock) {
+        require(_zicoToken != address(0) && _linkToken != address(0) && _timelock != address(0), "Zero address");
+        zicoToken = IERC20(_zicoToken);
+        linkToken = IERC20(_linkToken);
+        timelock = _timelock;
+    }
+
+    function transferTimelock(address newTimelock) external onlyTimelock {
+        require(newTimelock != address(0), "Zero address");
+        timelock = newTimelock;
+        emit TimelockTransferred(newTimelock);
+    }
+
+    function setRewardManager(address _rewardManager) external onlyTimelock {
         rewardManager = IRewardManager(_rewardManager);
         emit RewardManagerSet(_rewardManager);
     }
@@ -43,7 +59,7 @@ contract TreasuryVault is Ownable {
         emit FeeReceived(msg.sender, zicoAmount, linkAmount);
     }
 
-    function harvest() external onlyOwner {
+    function harvest() external onlyTimelock {
         uint256 zicoAmount = zicoCollected;
         uint256 linkAmount = linkCollected;
 
@@ -58,7 +74,7 @@ contract TreasuryVault is Ownable {
         emit Harvested(zicoAmount, linkAmount);
     }
 
-    function withdrawTokens(address token, address to, uint256 amount) external onlyOwner {
+    function withdrawTokens(address token, address to, uint256 amount) external onlyTimelock {
         require(IERC20(token).transfer(to, amount), "Withdraw failed");
     }
 }
