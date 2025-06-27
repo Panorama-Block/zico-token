@@ -31,14 +31,15 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     mapping(uint256 => uint256) public requestIdToReward;
 
     address public treasuryVault;
-    uint16 public crossChainFeeBps = 50; 
-    uint16 public constant MAX_FEE_BPS = 1000; 
+    uint16 public crossChainFeeBps = 50;
+    uint16 public constant MAX_FEE_BPS = 1000;
 
     address public timelock;
     uint64 public functionsSubscriptionId;
     bytes32 public functionsDonId;
     uint32 public functionsCallbackGasLimit = 100000;
     uint256 public aprStaking;
+
     event APRUpdated(uint256 newApr);
 
     // Taxas de serviços premium
