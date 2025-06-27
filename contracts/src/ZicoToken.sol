@@ -35,12 +35,10 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     uint16 public constant MAX_FEE_BPS = 1000; 
 
     address public timelock;
-
-    // Chainlink Functions config
     uint64 public functionsSubscriptionId;
     bytes32 public functionsDonId;
     uint32 public functionsCallbackGasLimit = 100000;
-    uint256 public aprStaking; // Exemplo: APR dinâmica ajustada via Chainlink Functions
+    uint256 public aprStaking;
     event APRUpdated(uint256 newApr);
 
     modifier onlyTimelock() {
@@ -159,6 +157,10 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     }
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override onlyRouter {
+        address expectedRemote = remotes[message.sourceChainSelector];
+        require(expectedRemote != address(0), "Remote not set for chain");
+        address sender = abi.decode(message.sender, (address));
+        require(sender == expectedRemote, "Unauthorized CCIP sender");
         (address to, uint256 amount) = abi.decode(message.data, (address, uint256));
         _mint(to, amount);
         emit CrossChainReceive(to, amount);

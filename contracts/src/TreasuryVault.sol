@@ -21,8 +21,14 @@ contract TreasuryVault {
     event Harvested(uint256 zicoAmount, uint256 linkAmount);
     event RewardManagerSet(address rewardManager);
     event TimelockTransferred(address indexed newTimelock);
+    event OperationalWalletSet(address indexed newWallet);
+    event FeeDistributionUpdated(uint16 stakingPercent, uint16 operationsPercent);
 
     address public timelock;
+    address public operationalWallet;
+    uint16 public stakingPercent = 8000; // 80% (em basis points)
+    uint16 public operationsPercent = 2000; // 20% (em basis points)
+    uint16 public constant MAX_BPS = 10000;
 
     modifier onlyTimelock() {
         require(msg.sender == timelock, "Not timelock");
@@ -34,6 +40,7 @@ contract TreasuryVault {
         zicoToken = IERC20(_zicoToken);
         linkToken = IERC20(_linkToken);
         timelock = _timelock;
+        operationalWallet = _timelock;
     }
 
     function transferTimelock(address newTimelock) external onlyTimelock {
@@ -45,6 +52,19 @@ contract TreasuryVault {
     function setRewardManager(address _rewardManager) external onlyTimelock {
         rewardManager = IRewardManager(_rewardManager);
         emit RewardManagerSet(_rewardManager);
+    }
+
+    function setOperationalWallet(address _wallet) external onlyTimelock {
+        require(_wallet != address(0), "Zero address");
+        operationalWallet = _wallet;
+        emit OperationalWalletSet(_wallet);
+    }
+
+    function setFeeDistribution(uint16 _stakingPercent, uint16 _operationsPercent) external onlyTimelock {
+        require(_stakingPercent + _operationsPercent == MAX_BPS, "Percents must sum 10000");
+        stakingPercent = _stakingPercent;
+        operationsPercent = _operationsPercent;
+        emit FeeDistributionUpdated(_stakingPercent, _operationsPercent);
     }
 
     function payFee(uint256 zicoAmount, uint256 linkAmount) external {
@@ -66,9 +86,15 @@ contract TreasuryVault {
         zicoCollected = 0;
         linkCollected = 0;
 
-        if (address(rewardManager) != address(0) && zicoAmount > 0) {
-            zicoToken.approve(address(rewardManager), zicoAmount);
-            rewardManager.updateReward(msg.sender, zicoAmount); // ou algum outro mecanismo de distribuição
+        uint256 stakingAmount = (zicoAmount * stakingPercent) / MAX_BPS;
+        uint256 operationsAmount = zicoAmount - stakingAmount;
+
+        if (address(rewardManager) != address(0) && stakingAmount > 0) {
+            zicoToken.approve(address(rewardManager), stakingAmount);
+            rewardManager.updateReward(msg.sender, stakingAmount);
+        }
+        if (operationalWallet != address(0) && operationsAmount > 0) {
+            require(zicoToken.transfer(operationalWallet, operationsAmount), "Ops transfer failed");
         }
 
         emit Harvested(zicoAmount, linkAmount);
