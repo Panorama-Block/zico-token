@@ -48,7 +48,7 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         keyHash = _keyHash;
         subscriptionId = _subscriptionId;
 
-        _mint(msg.sender, 1_000_000 ether);
+        _mint(msg.sender, 1_000_000_000 ether);
     }
 
     function stake(uint256 amount) external {
