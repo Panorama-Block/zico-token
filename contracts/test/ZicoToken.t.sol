@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/ZicoToken.sol";
-import "../src/TreasuryVault.sol";
+import "../src/TreasuryVault.sol" as LocalTreasuryVault;
 import "../src/ProofOfReserve.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -22,7 +22,7 @@ contract MockZico is ERC20 {
 contract ZicoTokenTest is Test {
     ZicoToken public zico;
     MockZico public zicoToken;
-    TreasuryVault public treasury;
+    LocalTreasuryVault.TreasuryVault public treasury;
     ProofOfReserve public proof;
     address public timelock = address(0x123);
     address public user = address(0x456);
@@ -35,7 +35,7 @@ contract ZicoTokenTest is Test {
 
     function setUp() public {
         zicoToken = new MockZico();
-        treasury = new TreasuryVault(address(zicoToken), address(zicoToken), timelock);
+        treasury = new LocalTreasuryVault.TreasuryVault(address(zicoToken), address(zicoToken), timelock);
         uint64[] memory selectors = new uint64[](1);
         selectors[0] = 1;
         proof = new ProofOfReserve(timelock, selectors);
