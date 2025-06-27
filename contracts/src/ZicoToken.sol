@@ -44,18 +44,23 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
 
     // Taxas de serviços premium
     mapping(bytes32 => uint256) public premiumServiceFees; // taxa em wei por serviço
+
     event PremiumServiceFeeSet(bytes32 indexed serviceId, uint256 fee);
     event PremiumServicePaid(address indexed user, bytes32 indexed serviceId, uint256 fee);
 
     // Integração com staking shares
     address public stakingContract;
+
     event StakingContractSet(address indexed stakingContract);
 
     // Pausa automática
     bool public paused;
+
     event Paused();
     event Unpaused();
+
     address public proofOfReserve;
+
     event ProofOfReserveSet(address indexed proofOfReserve);
 
     IERC20 public zicoToken;
@@ -279,6 +284,7 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
 
     // Exemplo: exigir 1000 shares para acessar serviços premium
     uint256 public constant PREMIUM_SERVICE_MIN_SHARES = 1000 ether;
+
     function payPremiumService(bytes32 serviceId) external onlyStakingLevel(PREMIUM_SERVICE_MIN_SHARES) whenNotPaused {
         uint256 fee = premiumServiceFees[serviceId];
         require(fee > 0, "Service not available");

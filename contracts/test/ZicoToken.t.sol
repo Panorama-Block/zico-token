@@ -8,7 +8,9 @@ import "../src/ProofOfReserve.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockRouter {}
+
 contract MockVRFCoordinator {}
+
 contract MockFunctionsRouter {}
 
 contract MockZico is ERC20 {
@@ -30,7 +32,7 @@ contract ZicoTokenTest is Test {
     address public functionsRouter = address(new MockFunctionsRouter());
     bytes32 public keyHash = bytes32(uint256(1));
     uint64 public subId = 1;
-    
+
     function setUp() public {
         zicoToken = new MockZico();
         treasury = new TreasuryVault(address(zicoToken), address(zicoToken), timelock);
@@ -39,14 +41,7 @@ contract ZicoTokenTest is Test {
         proof = new ProofOfReserve(timelock, selectors);
         vm.prank(timelock);
         zico = new ZicoToken(
-            router,
-            address(zicoToken),
-            vrf,
-            keyHash,
-            subId,
-            timelock,
-            functionsRouter,
-            address(zicoToken)
+            router, address(zicoToken), vrf, keyHash, subId, timelock, functionsRouter, address(zicoToken)
         );
         vm.prank(timelock);
         zico.setTreasuryVault(address(treasury));
@@ -104,7 +99,7 @@ contract ZicoTokenTest is Test {
     function testAutoPauseIfUnhealthy() public {
         vm.prank(timelock);
         zico.unpause();
-        vm.etch(address(proof), hex"00"); 
+        vm.etch(address(proof), hex"00");
         vm.prank(user);
         vm.expectRevert();
         zico.autoPauseIfUnhealthy();

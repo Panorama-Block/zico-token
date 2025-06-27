@@ -6,31 +6,25 @@ import {IAny2EVMMessageReceiver} from "../../../interfaces/IAny2EVMMessageReceiv
 import {Client} from "../../../libraries/Client.sol";
 
 contract MaybeRevertMessageReceiverNo165 is IAny2EVMMessageReceiver {
-  address private s_manager;
-  bool public s_toRevert;
+    address private s_manager;
+    bool public s_toRevert;
 
-  event MessageReceived();
+    event MessageReceived();
 
-  constructor(
-    bool toRevert
-  ) {
-    s_manager = msg.sender;
-    s_toRevert = toRevert;
-  }
-
-  function setRevert(
-    bool toRevert
-  ) external {
-    s_toRevert = toRevert;
-  }
-
-  function ccipReceive(
-    Client.Any2EVMMessage calldata
-  ) external override {
-    if (s_toRevert) {
-      // solhint-disable-next-line reason-string,gas-custom-errors
-      revert();
+    constructor(bool toRevert) {
+        s_manager = msg.sender;
+        s_toRevert = toRevert;
     }
-    emit MessageReceived();
-  }
+
+    function setRevert(bool toRevert) external {
+        s_toRevert = toRevert;
+    }
+
+    function ccipReceive(Client.Any2EVMMessage calldata) external override {
+        if (s_toRevert) {
+            // solhint-disable-next-line reason-string,gas-custom-errors
+            revert();
+        }
+        emit MessageReceived();
+    }
 }

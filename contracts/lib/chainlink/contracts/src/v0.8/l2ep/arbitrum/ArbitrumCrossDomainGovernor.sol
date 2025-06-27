@@ -18,46 +18,48 @@ import {Address} from "../../vendor/openzeppelin-solidity/v4.7.3/contracts/utils
  *   can be considered to be simultaneously owned by the `l1Owner` and L2 `owner`
  */
 contract ArbitrumCrossDomainGovernor is IDelegateForwarder, ArbitrumCrossDomainForwarder {
-  /**
-   * @notice creates a new Arbitrum xDomain Forwarder contract
-   * @param l1OwnerAddr the L1 owner address that will be allowed to call the forward fn
-   * @dev Empty constructor required due to inheriting from abstract contract CrossDomainForwarder
-   */
-  constructor(address l1OwnerAddr) ArbitrumCrossDomainForwarder(l1OwnerAddr) {}
+    /**
+     * @notice creates a new Arbitrum xDomain Forwarder contract
+     * @param l1OwnerAddr the L1 owner address that will be allowed to call the forward fn
+     * @dev Empty constructor required due to inheriting from abstract contract CrossDomainForwarder
+     */
+    constructor(address l1OwnerAddr) ArbitrumCrossDomainForwarder(l1OwnerAddr) {}
 
-  /**
-   * @notice versions:
-   *
-   * - ArbitrumCrossDomainGovernor 1.0.0: initial release
-   *
-   * @inheritdoc ITypeAndVersion
-   */
-  function typeAndVersion() external pure virtual override returns (string memory) {
-    return "ArbitrumCrossDomainGovernor 1.0.0";
-  }
+    /**
+     * @notice versions:
+     *
+     * - ArbitrumCrossDomainGovernor 1.0.0: initial release
+     *
+     * @inheritdoc ITypeAndVersion
+     */
+    function typeAndVersion() external pure virtual override returns (string memory) {
+        return "ArbitrumCrossDomainGovernor 1.0.0";
+    }
 
-  /**
-   * @dev forwarded only if L2 Messenger calls with `msg.sender` being the L1 owner address, or called by the L2 owner
-   * @inheritdoc IForwarder
-   */
-  function forward(address target, bytes memory data) external override onlyLocalOrCrossDomainOwner {
-    Address.functionCall(target, data, "Governor call reverted");
-  }
+    /**
+     * @dev forwarded only if L2 Messenger calls with `msg.sender` being the L1 owner address, or called by the L2 owner
+     * @inheritdoc IForwarder
+     */
+    function forward(address target, bytes memory data) external override onlyLocalOrCrossDomainOwner {
+        Address.functionCall(target, data, "Governor call reverted");
+    }
 
-  /**
-   * @dev forwarded only if L2 Messenger calls with `msg.sender` being the L1 owner address, or called by the L2 owner
-   * @inheritdoc IDelegateForwarder
-   */
-  function forwardDelegate(address target, bytes memory data) external override onlyLocalOrCrossDomainOwner {
-    Address.functionDelegateCall(target, data, "Governor delegatecall reverted");
-  }
+    /**
+     * @dev forwarded only if L2 Messenger calls with `msg.sender` being the L1 owner address, or called by the L2 owner
+     * @inheritdoc IDelegateForwarder
+     */
+    function forwardDelegate(address target, bytes memory data) external override onlyLocalOrCrossDomainOwner {
+        Address.functionDelegateCall(target, data, "Governor delegatecall reverted");
+    }
 
-  /**
-   * @notice The call MUST come from either the L1 owner (via cross-chain message) or the L2 owner. Reverts otherwise.
-   */
-  modifier onlyLocalOrCrossDomainOwner() {
-    // solhint-disable-next-line gas-custom-errors
-    require(msg.sender == crossDomainMessenger() || msg.sender == owner(), "Sender is not the L2 messenger or owner");
-    _;
-  }
+    /**
+     * @notice The call MUST come from either the L1 owner (via cross-chain message) or the L2 owner. Reverts otherwise.
+     */
+    modifier onlyLocalOrCrossDomainOwner() {
+        // solhint-disable-next-line gas-custom-errors
+        require(
+            msg.sender == crossDomainMessenger() || msg.sender == owner(), "Sender is not the L2 messenger or owner"
+        );
+        _;
+    }
 }

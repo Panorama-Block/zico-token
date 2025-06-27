@@ -108,4 +108,4 @@ contract ZicoRaffleMock is ZicoRaffle {
     function callFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) public {
         fulfillRandomWords(requestId, randomWords);
     }
-} 
+}

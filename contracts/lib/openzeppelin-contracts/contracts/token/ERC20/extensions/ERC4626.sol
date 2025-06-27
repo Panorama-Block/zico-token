@@ -84,9 +84,8 @@ abstract contract ERC4626 is ERC20, IERC4626 {
      * @dev Attempts to fetch the asset decimals. A return value of false indicates that the attempt failed in some way.
      */
     function _tryGetAssetDecimals(IERC20 asset_) private view returns (bool ok, uint8 assetDecimals) {
-        (bool success, bytes memory encodedDecimals) = address(asset_).staticcall(
-            abi.encodeCall(IERC20Metadata.decimals, ())
-        );
+        (bool success, bytes memory encodedDecimals) =
+            address(asset_).staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
         if (success && encodedDecimals.length >= 32) {
             uint256 returnedDecimals = abi.decode(encodedDecimals, (uint256));
             if (returnedDecimals <= type(uint8).max) {
@@ -253,13 +252,10 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     /**
      * @dev Withdraw/redeem common workflow.
      */
-    function _withdraw(
-        address caller,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares
-    ) internal virtual {
+    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        internal
+        virtual
+    {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
         }

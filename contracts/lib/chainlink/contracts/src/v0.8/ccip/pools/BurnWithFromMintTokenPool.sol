@@ -16,28 +16,26 @@ import {SafeERC20} from "../../vendor/openzeppelin-solidity/v4.8.3/contracts/tok
 /// If that is expected, please make sure the token's burner/minter roles are adjustable.
 /// @dev This contract is a variant of BurnMintTokenPool that uses `burn(from, amount)`.
 contract BurnWithFromMintTokenPool is BurnMintTokenPoolAbstract, ITypeAndVersion {
-  using SafeERC20 for IBurnMintERC20;
+    using SafeERC20 for IBurnMintERC20;
 
-  constructor(
-    IBurnMintERC20 token,
-    uint8 localTokenDecimals,
-    address[] memory allowlist,
-    address rmnProxy,
-    address router
-  ) TokenPool(token, localTokenDecimals, allowlist, rmnProxy, router) {
-    // Some tokens allow burning from the sender without approval, but not all do.
-    // To be safe, we approve the pool to burn from the pool.
-    token.safeIncreaseAllowance(address(this), type(uint256).max);
-  }
+    constructor(
+        IBurnMintERC20 token,
+        uint8 localTokenDecimals,
+        address[] memory allowlist,
+        address rmnProxy,
+        address router
+    ) TokenPool(token, localTokenDecimals, allowlist, rmnProxy, router) {
+        // Some tokens allow burning from the sender without approval, but not all do.
+        // To be safe, we approve the pool to burn from the pool.
+        token.safeIncreaseAllowance(address(this), type(uint256).max);
+    }
 
-  /// @inheritdoc BurnMintTokenPoolAbstract
-  function _burn(
-    uint256 amount
-  ) internal virtual override {
-    IBurnMintERC20(address(i_token)).burn(address(this), amount);
-  }
+    /// @inheritdoc BurnMintTokenPoolAbstract
+    function _burn(uint256 amount) internal virtual override {
+        IBurnMintERC20(address(i_token)).burn(address(this), amount);
+    }
 
-  function typeAndVersion() external pure virtual override returns (string memory) {
-    return "BurnWithFromMintTokenPool 1.5.1";
-  }
+    function typeAndVersion() external pure virtual override returns (string memory) {
+        return "BurnWithFromMintTokenPool 1.5.1";
+    }
 }

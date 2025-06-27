@@ -5,11 +5,11 @@ import {Client} from "../../../libraries/Client.sol";
 import {OffRampSetup} from "./OffRampSetup.t.sol";
 
 contract OffRamp_ccipReceive is OffRampSetup {
-  function test_RevertWhen_Always() public {
-    Client.Any2EVMMessage memory message;
+    function test_RevertWhen_Always() public {
+        Client.Any2EVMMessage memory message;
 
-    vm.expectRevert();
+        vm.expectRevert();
 
-    s_offRamp.ccipReceive(message);
-  }
+        s_offRamp.ccipReceive(message);
+    }
 }

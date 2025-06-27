@@ -24,12 +24,12 @@ abstract contract GovernorNoncesKeyed is Governor, NoncesKeyed {
      * NOTE: This function won't call `super._validateVoteSig` if the keyed nonce is valid.
      * Side effects may be skipped depending on the linearization of the function.
      */
-    function _validateVoteSig(
-        uint256 proposalId,
-        uint8 support,
-        address voter,
-        bytes memory signature
-    ) internal virtual override returns (bool) {
+    function _validateVoteSig(uint256 proposalId, uint8 support, address voter, bytes memory signature)
+        internal
+        virtual
+        override
+        returns (bool)
+    {
         if (
             SignatureChecker.isValidSignatureNow(
                 voter,

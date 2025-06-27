@@ -6,25 +6,25 @@ import {WorkflowRegistry} from "../../WorkflowRegistry.sol";
 import {WorkflowRegistrySetup} from "./WorkflowRegistrySetup.t.sol";
 
 contract WorkflowRegistry_unlockRegistry is WorkflowRegistrySetup {
-  function test_RevertWhen_TheCallerIsNotTheContractOwner() external {
-    vm.expectRevert(Ownable2Step.OnlyCallableByOwner.selector);
-    s_registry.unlockRegistry();
-  }
+    function test_RevertWhen_TheCallerIsNotTheContractOwner() external {
+        vm.expectRevert(Ownable2Step.OnlyCallableByOwner.selector);
+        s_registry.unlockRegistry();
+    }
 
-  function test_WhenTheCallerIsTheContractOwner() external {
-    // Lock the registry first
-    vm.startPrank(s_owner);
-    s_registry.lockRegistry();
+    function test_WhenTheCallerIsTheContractOwner() external {
+        // Lock the registry first
+        vm.startPrank(s_owner);
+        s_registry.lockRegistry();
 
-    assertTrue(s_registry.isRegistryLocked());
+        assertTrue(s_registry.isRegistryLocked());
 
-    // Unlock the registry
-    vm.expectEmit(true, true, false, false);
-    emit WorkflowRegistry.RegistryUnlockedV1(s_owner);
+        // Unlock the registry
+        vm.expectEmit(true, true, false, false);
+        emit WorkflowRegistry.RegistryUnlockedV1(s_owner);
 
-    s_registry.unlockRegistry();
+        s_registry.unlockRegistry();
 
-    assertFalse(s_registry.isRegistryLocked());
-    vm.stopPrank();
-  }
+        assertFalse(s_registry.isRegistryLocked());
+        vm.stopPrank();
+    }
 }

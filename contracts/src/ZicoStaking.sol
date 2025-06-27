@@ -13,6 +13,7 @@ interface IZicoToken {
 contract ZicoStakingShares is ERC20, Ownable {
     IZicoToken public zicoToken;
     address public timelock;
+
     event Staked(address indexed user, uint256 zicoAmount, uint256 sharesMinted);
     event Unstaked(address indexed user, uint256 zicoAmount, uint256 sharesBurned);
     event TimelockTransferred(address indexed newTimelock);

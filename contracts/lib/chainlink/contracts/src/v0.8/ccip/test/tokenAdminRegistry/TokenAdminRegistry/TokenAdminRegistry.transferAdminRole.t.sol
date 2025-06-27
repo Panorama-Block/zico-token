@@ -5,30 +5,30 @@ import {TokenAdminRegistry} from "../../../tokenAdminRegistry/TokenAdminRegistry
 import {TokenAdminRegistrySetup} from "./TokenAdminRegistrySetup.t.sol";
 
 contract TokenAdminRegistry_transferAdminRole is TokenAdminRegistrySetup {
-  function test_transferAdminRole() public {
-    address token = s_sourceTokens[0];
+    function test_transferAdminRole() public {
+        address token = s_sourceTokens[0];
 
-    address currentAdmin = s_tokenAdminRegistry.getTokenConfig(token).administrator;
-    address newAdmin = makeAddr("newAdmin");
+        address currentAdmin = s_tokenAdminRegistry.getTokenConfig(token).administrator;
+        address newAdmin = makeAddr("newAdmin");
 
-    vm.expectEmit();
-    emit TokenAdminRegistry.AdministratorTransferRequested(token, currentAdmin, newAdmin);
+        vm.expectEmit();
+        emit TokenAdminRegistry.AdministratorTransferRequested(token, currentAdmin, newAdmin);
 
-    s_tokenAdminRegistry.transferAdminRole(token, newAdmin);
+        s_tokenAdminRegistry.transferAdminRole(token, newAdmin);
 
-    TokenAdminRegistry.TokenConfig memory config = s_tokenAdminRegistry.getTokenConfig(token);
+        TokenAdminRegistry.TokenConfig memory config = s_tokenAdminRegistry.getTokenConfig(token);
 
-    // Assert only the pending admin updates, without affecting the pending admin.
-    assertEq(config.pendingAdministrator, newAdmin);
-    assertEq(config.administrator, currentAdmin);
-  }
+        // Assert only the pending admin updates, without affecting the pending admin.
+        assertEq(config.pendingAdministrator, newAdmin);
+        assertEq(config.administrator, currentAdmin);
+    }
 
-  function test_RevertWhen_transferAdminRole_OnlyAdministrator() public {
-    vm.stopPrank();
+    function test_RevertWhen_transferAdminRole_OnlyAdministrator() public {
+        vm.stopPrank();
 
-    vm.expectRevert(
-      abi.encodeWithSelector(TokenAdminRegistry.OnlyAdministrator.selector, address(this), s_sourceTokens[0])
-    );
-    s_tokenAdminRegistry.transferAdminRole(s_sourceTokens[0], makeAddr("newAdmin"));
-  }
+        vm.expectRevert(
+            abi.encodeWithSelector(TokenAdminRegistry.OnlyAdministrator.selector, address(this), s_sourceTokens[0])
+        );
+        s_tokenAdminRegistry.transferAdminRole(s_sourceTokens[0], makeAddr("newAdmin"));
+    }
 }

@@ -2,7 +2,7 @@
 pragma solidity 0.8.6;
 
 /* External Imports */
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title OVM_GasPriceOracle
@@ -16,9 +16,11 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * the deployed bytecode instead of running the initcode.
  */
 contract OVM_GasPriceOracle is Ownable {
-    /*************
+    /**
+     *
      * Variables *
-     *************/
+     *
+     */
 
     // Current L2 gas price
     uint256 public gasPrice;
@@ -31,9 +33,11 @@ contract OVM_GasPriceOracle is Ownable {
     // Number of decimals of the scalar
     uint256 public decimals;
 
-    /***************
+    /**
+     *
      * Constructor *
-     ***************/
+     *
+     */
 
     /**
      * @param _owner Address that will initially own this contract.
@@ -42,19 +46,22 @@ contract OVM_GasPriceOracle is Ownable {
         transferOwnership(_owner);
     }
 
-    /**********
+    /**
+     *
      * Events *
-     **********/
-
+     *
+     */
     event GasPriceUpdated(uint256);
     event L1BaseFeeUpdated(uint256);
     event OverheadUpdated(uint256);
     event ScalarUpdated(uint256);
     event DecimalsUpdated(uint256);
 
-    /********************
+    /**
+     *
      * Public Functions *
-     ********************/
+     *
+     */
 
     /**
      * Allows the owner to modify the l2 gas price.
@@ -117,7 +124,7 @@ contract OVM_GasPriceOracle is Ownable {
     function getL1Fee(bytes memory _data) public view returns (uint256) {
         uint256 l1GasUsed = getL1GasUsed(_data);
         uint256 l1Fee = l1GasUsed * l1BaseFee;
-        uint256 divisor = 10**decimals;
+        uint256 divisor = 10 ** decimals;
         uint256 unscaled = l1Fee * scalar;
         uint256 scaled = unscaled / divisor;
         return scaled;

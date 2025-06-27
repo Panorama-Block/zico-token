@@ -18,55 +18,55 @@ import {Address} from "../../vendor/openzeppelin-solidity/v4.7.3/contracts/utils
  *   can be considered to be owned by the `l1Owner`
  */
 contract ArbitrumCrossDomainForwarder is ITypeAndVersion, CrossDomainForwarder {
-  /**
-   * @notice creates a new Arbitrum xDomain Forwarder contract
-   * @param l1OwnerAddr the L1 owner address that will be allowed to call the forward fn
-   * @dev Empty constructor required due to inheriting from abstract contract CrossDomainForwarder
-   */
-  constructor(address l1OwnerAddr) CrossDomainOwnable(l1OwnerAddr) {}
+    /**
+     * @notice creates a new Arbitrum xDomain Forwarder contract
+     * @param l1OwnerAddr the L1 owner address that will be allowed to call the forward fn
+     * @dev Empty constructor required due to inheriting from abstract contract CrossDomainForwarder
+     */
+    constructor(address l1OwnerAddr) CrossDomainOwnable(l1OwnerAddr) {}
 
-  /**
-   * @notice versions:
-   *
-   * - ArbitrumCrossDomainForwarder 0.1.0: initial release
-   * - ArbitrumCrossDomainForwarder 1.0.0: Use OZ Address, CrossDomainOwnable
-   *
-   * @inheritdoc ITypeAndVersion
-   */
-  function typeAndVersion() external pure virtual override returns (string memory) {
-    return "ArbitrumCrossDomainForwarder 1.0.0";
-  }
+    /**
+     * @notice versions:
+     *
+     * - ArbitrumCrossDomainForwarder 0.1.0: initial release
+     * - ArbitrumCrossDomainForwarder 1.0.0: Use OZ Address, CrossDomainOwnable
+     *
+     * @inheritdoc ITypeAndVersion
+     */
+    function typeAndVersion() external pure virtual override returns (string memory) {
+        return "ArbitrumCrossDomainForwarder 1.0.0";
+    }
 
-  /**
-   * @notice The L2 xDomain `msg.sender`, generated from L1 sender address
-   */
-  function crossDomainMessenger() public view returns (address) {
-    return AddressAliasHelper.applyL1ToL2Alias(l1Owner());
-  }
+    /**
+     * @notice The L2 xDomain `msg.sender`, generated from L1 sender address
+     */
+    function crossDomainMessenger() public view returns (address) {
+        return AddressAliasHelper.applyL1ToL2Alias(l1Owner());
+    }
 
-  /**
-   * @dev forwarded only if L2 Messenger calls with `xDomainMessageSender` being the L1 owner address
-   * @inheritdoc IForwarder
-   */
-  function forward(address target, bytes memory data) external virtual override onlyL1Owner {
-    Address.functionCall(target, data, "Forwarder call reverted");
-  }
+    /**
+     * @dev forwarded only if L2 Messenger calls with `xDomainMessageSender` being the L1 owner address
+     * @inheritdoc IForwarder
+     */
+    function forward(address target, bytes memory data) external virtual override onlyL1Owner {
+        Address.functionCall(target, data, "Forwarder call reverted");
+    }
 
-  /**
-   * @notice The call MUST come from the L1 owner (via cross-chain message.) Reverts otherwise.
-   */
-  modifier onlyL1Owner() override {
-    // solhint-disable-next-line gas-custom-errors
-    require(msg.sender == crossDomainMessenger(), "Sender is not the L2 messenger");
-    _;
-  }
+    /**
+     * @notice The call MUST come from the L1 owner (via cross-chain message.) Reverts otherwise.
+     */
+    modifier onlyL1Owner() override {
+        // solhint-disable-next-line gas-custom-errors
+        require(msg.sender == crossDomainMessenger(), "Sender is not the L2 messenger");
+        _;
+    }
 
-  /**
-   * @notice The call MUST come from the proposed L1 owner (via cross-chain message.) Reverts otherwise.
-   */
-  modifier onlyProposedL1Owner() override {
-    // solhint-disable-next-line gas-custom-errors
-    require(msg.sender == AddressAliasHelper.applyL1ToL2Alias(s_l1PendingOwner), "Must be proposed L1 owner");
-    _;
-  }
+    /**
+     * @notice The call MUST come from the proposed L1 owner (via cross-chain message.) Reverts otherwise.
+     */
+    modifier onlyProposedL1Owner() override {
+        // solhint-disable-next-line gas-custom-errors
+        require(msg.sender == AddressAliasHelper.applyL1ToL2Alias(s_l1PendingOwner), "Must be proposed L1 owner");
+        _;
+    }
 }

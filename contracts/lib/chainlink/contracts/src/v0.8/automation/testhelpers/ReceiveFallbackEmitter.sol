@@ -3,9 +3,9 @@
 pragma solidity 0.8.6;
 
 contract ReceiveFallbackEmitter {
-  event FundsReceived(uint256 amount, uint256 newBalance);
+    event FundsReceived(uint256 amount, uint256 newBalance);
 
-  fallback() external payable {
-    emit FundsReceived(msg.value, address(this).balance);
-  }
+    fallback() external payable {
+        emit FundsReceived(msg.value, address(this).balance);
+    }
 }

@@ -40,13 +40,7 @@ contract ZicoRaffleTest is Test {
 
     function setUp() public {
         zicoToken = new MockZico();
-        raffle = new ZicoRaffleMock(
-            vrf,
-            address(zicoToken),
-            treasury,
-            keyHash,
-            subId
-        );
+        raffle = new ZicoRaffleMock(vrf, address(zicoToken), treasury, keyHash, subId);
         zicoToken.transfer(treasury, 1_000_000 ether);
     }
 
@@ -78,4 +72,4 @@ contract ZicoRaffleTest is Test {
         vm.expectRevert("Insufficient allowance from treasury");
         raffle.requestRaffle(prize);
     }
-} 
+}

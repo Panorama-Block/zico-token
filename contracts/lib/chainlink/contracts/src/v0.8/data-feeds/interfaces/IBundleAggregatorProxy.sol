@@ -5,11 +5,9 @@ import {IBundleBaseAggregator} from "./IBundleBaseAggregator.sol";
 import {ICommonAggregator} from "./ICommonAggregator.sol";
 
 interface IBundleAggregatorProxy is IBundleBaseAggregator, ICommonAggregator {
-  function proposedAggregator() external view returns (address);
+    function proposedAggregator() external view returns (address);
 
-  function confirmAggregator(
-    address aggregatorAddress
-  ) external;
+    function confirmAggregator(address aggregatorAddress) external;
 
-  function aggregator() external view returns (address);
+    function aggregator() external view returns (address);
 }

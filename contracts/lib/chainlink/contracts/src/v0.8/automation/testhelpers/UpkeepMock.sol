@@ -4,78 +4,81 @@ pragma solidity ^0.8.0;
 import {AutomationCompatible} from "../AutomationCompatible.sol";
 
 contract UpkeepMock is AutomationCompatible {
-  bool public shouldRevertCheck;
-  bool public canCheck;
-  bool public canPerform;
-  bytes public performData;
-  uint256 public checkGasToBurn;
-  uint256 public performGasToBurn;
-  string public checkRevertReason;
+    bool public shouldRevertCheck;
+    bool public canCheck;
+    bool public canPerform;
+    bytes public performData;
+    uint256 public checkGasToBurn;
+    uint256 public performGasToBurn;
+    string public checkRevertReason;
 
-  uint256 constant checkGasBuffer = 6000; // use all but this amount in gas burn loops
-  uint256 constant performGasBuffer = 1000; // use all but this amount in gas burn loops
+    uint256 constant checkGasBuffer = 6000; // use all but this amount in gas burn loops
+    uint256 constant performGasBuffer = 1000; // use all but this amount in gas burn loops
 
-  event UpkeepPerformedWith(bytes upkeepData);
+    event UpkeepPerformedWith(bytes upkeepData);
 
-  function setShouldRevertCheck(bool value) public {
-    shouldRevertCheck = value;
-  }
-
-  function setPerformData(bytes calldata data) public {
-    performData = data;
-  }
-
-  function setCanCheck(bool value) public {
-    canCheck = value;
-  }
-
-  function setCanPerform(bool value) public {
-    canPerform = value;
-  }
-
-  function setCheckRevertReason(string calldata value) public {
-    checkRevertReason = value;
-  }
-
-  function setCheckGasToBurn(uint256 value) public {
-    require(value > checkGasBuffer || value == 0, "checkGasToBurn must be 0 (disabled) or greater than buffer");
-    if (value > 0) {
-      checkGasToBurn = value - checkGasBuffer;
-    } else {
-      checkGasToBurn = 0;
+    function setShouldRevertCheck(bool value) public {
+        shouldRevertCheck = value;
     }
-  }
 
-  function setPerformGasToBurn(uint256 value) public {
-    require(value > performGasBuffer || value == 0, "performGasToBurn must be 0 (disabled) or greater than buffer");
-    if (value > 0) {
-      performGasToBurn = value - performGasBuffer;
-    } else {
-      performGasToBurn = 0;
+    function setPerformData(bytes calldata data) public {
+        performData = data;
     }
-  }
 
-  function checkUpkeep(
-    bytes calldata
-  ) external override cannotExecute returns (bool callable, bytes memory executedata) {
-    require(!shouldRevertCheck, checkRevertReason);
-    uint256 startGas = gasleft();
-    bool couldCheck = canCheck;
+    function setCanCheck(bool value) public {
+        canCheck = value;
+    }
 
-    setCanCheck(false); // test that state modifications don't stick
+    function setCanPerform(bool value) public {
+        canPerform = value;
+    }
 
-    while (startGas - gasleft() < checkGasToBurn) {} // burn gas
+    function setCheckRevertReason(string calldata value) public {
+        checkRevertReason = value;
+    }
 
-    return (couldCheck, performData);
-  }
+    function setCheckGasToBurn(uint256 value) public {
+        require(value > checkGasBuffer || value == 0, "checkGasToBurn must be 0 (disabled) or greater than buffer");
+        if (value > 0) {
+            checkGasToBurn = value - checkGasBuffer;
+        } else {
+            checkGasToBurn = 0;
+        }
+    }
 
-  function performUpkeep(bytes calldata data) external override {
-    uint256 startGas = gasleft();
+    function setPerformGasToBurn(uint256 value) public {
+        require(value > performGasBuffer || value == 0, "performGasToBurn must be 0 (disabled) or greater than buffer");
+        if (value > 0) {
+            performGasToBurn = value - performGasBuffer;
+        } else {
+            performGasToBurn = 0;
+        }
+    }
 
-    require(canPerform, "Cannot perform");
+    function checkUpkeep(bytes calldata)
+        external
+        override
+        cannotExecute
+        returns (bool callable, bytes memory executedata)
+    {
+        require(!shouldRevertCheck, checkRevertReason);
+        uint256 startGas = gasleft();
+        bool couldCheck = canCheck;
 
-    emit UpkeepPerformedWith(data);
+        setCanCheck(false); // test that state modifications don't stick
 
-    while (startGas - gasleft() < performGasToBurn) {} // burn gas
-  }
+        while (startGas - gasleft() < checkGasToBurn) {} // burn gas
+
+        return (couldCheck, performData);
+    }
+
+    function performUpkeep(bytes calldata data) external override {
+        uint256 startGas = gasleft();
+
+        require(canPerform, "Cannot perform");
+
+        emit UpkeepPerformedWith(data);
+
+        while (startGas - gasleft() < performGasToBurn) {} // burn gas
+    }
 }

@@ -10,18 +10,20 @@ import {Create2} from "../../../../vendor/openzeppelin-solidity/v5.0.2/contracts
 import {TokenPoolFactorySetup} from "./TokenPoolFactorySetup.t.sol";
 
 contract TokenPoolFactory_constructor is TokenPoolFactorySetup {
-  using Create2 for bytes32;
+    using Create2 for bytes32;
 
-  function test_RevertWhen_constructor() public {
-    // Revert cause the tokenAdminRegistry is address(0)
-    vm.expectRevert(TokenPoolFactory.InvalidZeroAddress.selector);
-    new TokenPoolFactory(ITokenAdminRegistry(address(0)), RegistryModuleOwnerCustom(address(0)), address(0), address(0));
+    function test_RevertWhen_constructor() public {
+        // Revert cause the tokenAdminRegistry is address(0)
+        vm.expectRevert(TokenPoolFactory.InvalidZeroAddress.selector);
+        new TokenPoolFactory(
+            ITokenAdminRegistry(address(0)), RegistryModuleOwnerCustom(address(0)), address(0), address(0)
+        );
 
-    new TokenPoolFactory(
-      ITokenAdminRegistry(address(0xdeadbeef)),
-      RegistryModuleOwnerCustom(address(0xdeadbeef)),
-      address(0xdeadbeef),
-      address(0xdeadbeef)
-    );
-  }
+        new TokenPoolFactory(
+            ITokenAdminRegistry(address(0xdeadbeef)),
+            RegistryModuleOwnerCustom(address(0xdeadbeef)),
+            address(0xdeadbeef),
+            address(0xdeadbeef)
+        );
+    }
 }

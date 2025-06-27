@@ -43,7 +43,7 @@ library Address {
             revert AddressInsufficientBalance(address(this));
         }
 
-        (bool success, ) = recipient.call{value: amount}("");
+        (bool success,) = recipient.call{value: amount}("");
         if (!success) {
             revert FailedInnerCall();
         }
@@ -111,11 +111,11 @@ library Address {
      * was not a contract or bubbling up the revert reason (falling back to {FailedInnerCall}) in case of an
      * unsuccessful call.
      */
-    function verifyCallResultFromTarget(
-        address target,
-        bool success,
-        bytes memory returndata
-    ) internal view returns (bytes memory) {
+    function verifyCallResultFromTarget(address target, bool success, bytes memory returndata)
+        internal
+        view
+        returns (bytes memory)
+    {
         if (!success) {
             _revert(returndata);
         } else {

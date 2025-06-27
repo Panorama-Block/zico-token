@@ -5,9 +5,9 @@ import {RegistryModuleOwnerCustom} from "../../../tokenAdminRegistry/RegistryMod
 import {RegistryModuleOwnerCustomSetup} from "./RegistryModuleOwnerCustomSetup.t.sol";
 
 contract RegistryModuleOwnerCustom_constructor is RegistryModuleOwnerCustomSetup {
-  function test_RevertWhen_constructor() public {
-    vm.expectRevert(abi.encodeWithSelector(RegistryModuleOwnerCustom.AddressZero.selector));
+    function test_RevertWhen_constructor() public {
+        vm.expectRevert(abi.encodeWithSelector(RegistryModuleOwnerCustom.AddressZero.selector));
 
-    new RegistryModuleOwnerCustom(address(0));
-  }
+        new RegistryModuleOwnerCustom(address(0));
+    }
 }

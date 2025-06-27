@@ -195,10 +195,13 @@ abstract contract MultiSignerERC7913 is AbstractSigner {
      *
      * * The `signature` must be encoded as `abi.encode(signers, signatures)`.
      */
-    function _rawSignatureValidation(
-        bytes32 hash,
-        bytes calldata signature
-    ) internal view virtual override returns (bool) {
+    function _rawSignatureValidation(bytes32 hash, bytes calldata signature)
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
         if (signature.length == 0) return false; // For ERC-7739 compatibility
         (bytes[] memory signers, bytes[] memory signatures) = abi.decode(signature, (bytes[], bytes[]));
         return _validateThreshold(signers) && _validateSignatures(hash, signers, signatures);
@@ -215,11 +218,12 @@ abstract contract MultiSignerERC7913 is AbstractSigner {
      *
      * * The `signatures` arrays must be at least as large as the `signers` arrays. Panics otherwise.
      */
-    function _validateSignatures(
-        bytes32 hash,
-        bytes[] memory signers,
-        bytes[] memory signatures
-    ) internal view virtual returns (bool valid) {
+    function _validateSignatures(bytes32 hash, bytes[] memory signers, bytes[] memory signatures)
+        internal
+        view
+        virtual
+        returns (bool valid)
+    {
         for (uint256 i = 0; i < signers.length; ++i) {
             if (!isSigner(signers[i])) {
                 return false;

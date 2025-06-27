@@ -14,6 +14,7 @@ contract MockZico is ERC20 {
 contract MockRewardManager is IRewardManager {
     address public lastUser;
     uint256 public lastReward;
+
     function updateReward(address user, uint256 rewardPool) external override {
         lastUser = user;
         lastReward = rewardPool;
@@ -98,4 +99,4 @@ contract TreasuryVaultTest is Test {
         uint256 expected = 1_000_000 ether - 100 ether + 50 ether;
         assertEq(zicoToken.balanceOf(user), expected);
     }
-} 
+}

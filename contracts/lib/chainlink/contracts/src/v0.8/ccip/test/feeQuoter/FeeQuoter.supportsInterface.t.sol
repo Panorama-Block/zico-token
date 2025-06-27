@@ -9,10 +9,10 @@ import {IFeeQuoter} from "../../interfaces/IFeeQuoter.sol";
 import {FeeQuoterSetup} from "./FeeQuoterSetup.t.sol";
 
 contract FeeQuoter_supportsInterface is FeeQuoterSetup {
-  function test_SupportsInterface() public view {
-    assertTrue(s_feeQuoter.supportsInterface(type(IReceiver).interfaceId));
-    assertTrue(s_feeQuoter.supportsInterface(type(ITypeAndVersion).interfaceId));
-    assertTrue(s_feeQuoter.supportsInterface(type(IFeeQuoter).interfaceId));
-    assertTrue(s_feeQuoter.supportsInterface(type(IERC165).interfaceId));
-  }
+    function test_SupportsInterface() public view {
+        assertTrue(s_feeQuoter.supportsInterface(type(IReceiver).interfaceId));
+        assertTrue(s_feeQuoter.supportsInterface(type(ITypeAndVersion).interfaceId));
+        assertTrue(s_feeQuoter.supportsInterface(type(IFeeQuoter).interfaceId));
+        assertTrue(s_feeQuoter.supportsInterface(type(IERC165).interfaceId));
+    }
 }

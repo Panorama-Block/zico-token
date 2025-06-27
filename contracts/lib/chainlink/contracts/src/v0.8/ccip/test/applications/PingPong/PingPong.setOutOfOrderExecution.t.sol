@@ -5,14 +5,14 @@ import {PingPongDemo} from "../../../applications/PingPongDemo.sol";
 import {PingPongDappSetup} from "./PingPongDappSetup.t.sol";
 
 contract PingPong_setOutOfOrderExecution is PingPongDappSetup {
-  function test_OutOfOrderExecution() public {
-    assertFalse(s_pingPong.getOutOfOrderExecution());
+    function test_OutOfOrderExecution() public {
+        assertFalse(s_pingPong.getOutOfOrderExecution());
 
-    vm.expectEmit();
-    emit PingPongDemo.OutOfOrderExecutionChange(true);
+        vm.expectEmit();
+        emit PingPongDemo.OutOfOrderExecutionChange(true);
 
-    s_pingPong.setOutOfOrderExecution(true);
+        s_pingPong.setOutOfOrderExecution(true);
 
-    assertTrue(s_pingPong.getOutOfOrderExecution());
-  }
+        assertTrue(s_pingPong.getOutOfOrderExecution());
+    }
 }

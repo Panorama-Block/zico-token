@@ -66,4 +66,4 @@ contract ProofOfReserveTest is Test {
         emit ProofOfReserve.SupplyReported(1, 100);
         proof.reportSupply(1, 100);
     }
-} 
+}
