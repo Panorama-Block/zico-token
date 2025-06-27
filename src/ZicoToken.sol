@@ -36,13 +36,7 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
     event RandomRewardRequested(uint256 requestId, uint256 rewardAmount);
     event RandomRewardGranted(address indexed winner, uint256 rewardAmount);
 
-    constructor(
-        address _router,
-        address _linkToken,
-        address vrfCoordinator,
-        bytes32 _keyHash,
-        uint64 _subscriptionId
-    )
+    constructor(address _router, address _linkToken, address vrfCoordinator, bytes32 _keyHash, uint64 _subscriptionId)
         ERC20("Zico Token", "ZICO")
         CCIPReceiver(_router)
         Ownable(msg.sender)
@@ -111,21 +105,19 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
             receiver: abi.encode(remote),
             data: data,
             tokenAmounts: emptyTokenAmounts,
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({gasLimit: 200_000})
-            ),
+            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 200_000})),
             feeToken: linkToken
         });
 
         uint256 fee = router.getFee(destChain, message);
         require(IERC20(linkToken).allowance(msg.sender, address(this)) >= fee, "Insufficient LINK allowance");
-        
+
         IERC20(linkToken).transferFrom(msg.sender, address(this), fee);
         IERC20(linkToken).approve(address(router), fee);
 
         router.ccipSend(destChain, message);
         emit CrossChainSend(destChain, msg.sender, amount);
-    }   
+    }
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override onlyRouter {
         (address to, uint256 amount) = abi.decode(message.data, (address, uint256));
@@ -141,13 +133,8 @@ contract ZicoToken is ERC20, Ownable, CCIPReceiver, VRFConsumerBaseV2 {
         require(stakerList.length > 0, "No stakers to reward");
         require(rewardAmount > 0 && rewardAmount <= balanceOf(address(this)), "Invalid reward amount");
 
-        uint256 requestId = COORDINATOR.requestRandomWords(
-            keyHash,
-            subscriptionId,
-            requestConfirmations,
-            callbackGasLimit,
-            numWords
-        );
+        uint256 requestId =
+            COORDINATOR.requestRandomWords(keyHash, subscriptionId, requestConfirmations, callbackGasLimit, numWords);
 
         requestIdToReward[requestId] = rewardAmount;
 

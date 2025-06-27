@@ -16,17 +16,11 @@ contract DeployScript is Script {
         bytes32 keyHash = 0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc; // Mock key hash
         uint64 subscriptionId = 1; // Mock subscription ID
 
-        ZicoToken zicoToken = new ZicoToken(
-            router,
-            linkToken,
-            vrfCoordinator,
-            keyHash,
-            subscriptionId
-        );
+        ZicoToken zicoToken = new ZicoToken(router, linkToken, vrfCoordinator, keyHash, subscriptionId);
 
         console.log("ZicoToken deployed to:", address(zicoToken));
         console.log("Initial supply minted to:", msg.sender);
 
         vm.stopBroadcast();
     }
-}   
+}

@@ -50,17 +50,11 @@ contract ZicoRaffle is VRFConsumerBaseV2, Ownable(msg.sender) {
     function requestRaffle(uint256 prizeAmount) external onlyOwner {
         require(participants.length > 0, "No participants");
         require(
-            zicoToken.allowance(treasuryVault, address(this)) >= prizeAmount,
-            "Insufficient allowance from treasury"
+            zicoToken.allowance(treasuryVault, address(this)) >= prizeAmount, "Insufficient allowance from treasury"
         );
 
-        uint256 requestId = coordinator.requestRandomWords(
-            keyHash,
-            subscriptionId,
-            requestConfirmations,
-            callbackGasLimit,
-            numWords
-        );
+        uint256 requestId =
+            coordinator.requestRandomWords(keyHash, subscriptionId, requestConfirmations, callbackGasLimit, numWords);
 
         requestIdToPrize[requestId] = prizeAmount;
         emit RaffleRequested(requestId, prizeAmount);
