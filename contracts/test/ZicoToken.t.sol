@@ -3,81 +3,110 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/ZicoToken.sol";
+import "../src/TreasuryVault.sol";
+import "../src/ProofOfReserve.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MockRouter {}
+contract MockVRFCoordinator {}
+contract MockFunctionsRouter {}
+
+contract MockZico is ERC20 {
+    constructor() ERC20("ZICO", "ZICO") {
+        _mint(msg.sender, 1_000_000_000 ether);
+    }
+}
 
 contract ZicoTokenTest is Test {
-    ZicoToken public token;
-    address public owner;
-    address public user1;
-    address public user2;
-
-    // Mock addresses for testing
-    address mockRouter = address(0x1);
-    address mockLink = address(0x2);
-    address mockVrfCoordinator = address(0x3);
-    bytes32 mockKeyHash = bytes32(uint256(1));
-    uint64 mockSubscriptionId = 1;
-
+    ZicoToken public zico;
+    MockZico public zicoToken;
+    TreasuryVault public treasury;
+    ProofOfReserve public proof;
+    address public timelock = address(0x123);
+    address public user = address(0x456);
+    address public premium = address(0x789);
+    address public router = address(new MockRouter());
+    address public vrf = address(new MockVRFCoordinator());
+    address public functionsRouter = address(new MockFunctionsRouter());
+    bytes32 public keyHash = bytes32(uint256(1));
+    uint64 public subId = 1;
+    
     function setUp() public {
-        owner = address(this);
-        user1 = makeAddr("user1");
-        user2 = makeAddr("user2");
-
-        // Deploy the contract with mock addresses
-        token = new ZicoToken(mockRouter, mockLink, mockVrfCoordinator, mockKeyHash, mockSubscriptionId);
+        zicoToken = new MockZico();
+        treasury = new TreasuryVault(address(zicoToken), address(zicoToken), timelock);
+        uint64[] memory selectors = new uint64[](1);
+        selectors[0] = 1;
+        proof = new ProofOfReserve(timelock, selectors);
+        vm.prank(timelock);
+        zico = new ZicoToken(
+            router,
+            address(zicoToken),
+            vrf,
+            keyHash,
+            subId,
+            timelock,
+            functionsRouter,
+            address(zicoToken)
+        );
+        vm.prank(timelock);
+        zico.setTreasuryVault(address(treasury));
+        vm.prank(timelock);
+        zico.setProofOfReserve(address(proof));
+        zicoToken.transfer(user, 1_000_000 ether);
     }
 
-    function test_InitialSupply() public {
-        assertEq(token.totalSupply(), 1_000_000 ether);
-        assertEq(token.balanceOf(owner), 1_000_000 ether);
+    function testStakeAndUnstake() public {
+        vm.startPrank(user);
+        zicoToken.approve(address(zico), 1000 ether);
+        uint256 shares = zico.stake(1000 ether);
+        assertEq(zico.balanceOf(user), shares);
+
+        uint256 totalShares = zico.totalSupply();
+        uint256 totalZico = zico.zicoTokenBalance();
+        uint256 expectedReturn = (shares * totalZico) / totalShares;
+
+        uint256 zicoReturned = zico.unstake(shares);
+        assertEq(zicoReturned, expectedReturn);
+        assertEq(zico.balanceOf(user), 0);
+        vm.stopPrank();
     }
 
-    function test_Transfer() public {
-        uint256 amount = 1000 ether;
-        token.transfer(user1, amount);
-
-        assertEq(token.balanceOf(user1), amount);
-        assertEq(token.balanceOf(owner), 1_000_000 ether - amount);
+    function test_RevertWhen_GatingWithoutStaking() public {
+        bytes32 serviceId = keccak256("AI_AGENT");
+        vm.prank(timelock);
+        zico.setPremiumServiceFee(serviceId, 10 ether);
+        vm.prank(timelock);
+        zico.setStakingContract(address(zico));
+        vm.startPrank(user);
+        zicoToken.approve(address(zico), 500 ether);
+        zico.stake(500 ether);
+        vm.expectRevert("Insufficient staking level");
+        zico.payPremiumService(serviceId);
+        vm.stopPrank();
     }
 
-    function test_Staking() public {
-        uint256 stakeAmount = 100 ether;
-
-        // Transfer tokens to user1 first
-        token.transfer(user1, stakeAmount);
-
-        // User1 stakes tokens
-        vm.prank(user1);
-        token.stake(stakeAmount);
-
-        assertEq(token.stakes(user1), stakeAmount);
-        assertEq(token.totalStaked(), stakeAmount);
-        assertEq(token.balanceOf(address(token)), stakeAmount);
+    function testPauseAndUnpause() public {
+        vm.prank(timelock);
+        zico.pause();
+        vm.startPrank(user);
+        zicoToken.approve(address(zico), 1000 ether);
+        vm.expectRevert("Paused");
+        zico.stake(1000 ether);
+        vm.stopPrank();
+        vm.prank(timelock);
+        zico.unpause();
+        vm.startPrank(user);
+        zico.stake(1000 ether);
+        assertGt(zico.balanceOf(user), 0);
+        vm.stopPrank();
     }
 
-    function test_Unstaking() public {
-        uint256 stakeAmount = 100 ether;
-        uint256 unstakeAmount = 50 ether;
-
-        // Setup staking first
-        token.transfer(user1, stakeAmount);
-        vm.prank(user1);
-        token.stake(stakeAmount);
-
-        // Unstake partial amount
-        vm.prank(user1);
-        token.unstake(unstakeAmount);
-
-        assertEq(token.stakes(user1), stakeAmount - unstakeAmount);
-        assertEq(token.totalStaked(), stakeAmount - unstakeAmount);
-    }
-
-    function test_OnlyOwnerFunctions() public {
-        // Test that non-owner cannot call distributeRewards
-        vm.prank(user1);
+    function testAutoPauseIfUnhealthy() public {
+        vm.prank(timelock);
+        zico.unpause();
+        vm.etch(address(proof), hex"00"); 
+        vm.prank(user);
         vm.expectRevert();
-        token.distributeRewards();
-
-        // Test that owner can call distributeRewards
-        token.distributeRewards(); // Should not revert
+        zico.autoPauseIfUnhealthy();
     }
 }
