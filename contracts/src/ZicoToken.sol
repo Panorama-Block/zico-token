@@ -41,6 +41,11 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
     uint256 public aprStaking;
     event APRUpdated(uint256 newApr);
 
+    // Taxas de serviços premium
+    mapping(bytes32 => uint256) public premiumServiceFees; // taxa em wei por serviço
+    event PremiumServiceFeeSet(bytes32 indexed serviceId, uint256 fee);
+    event PremiumServicePaid(address indexed user, bytes32 indexed serviceId, uint256 fee);
+
     modifier onlyTimelock() {
         require(msg.sender == timelock, "Not timelock");
         _;
@@ -235,5 +240,18 @@ contract ZicoToken is ERC20, CCIPReceiver, VRFConsumerBaseV2, FunctionsClient {
         uint256 newApr = abi.decode(response, (uint256));
         aprStaking = newApr;
         emit APRUpdated(newApr);
+    }
+
+    function setPremiumServiceFee(bytes32 serviceId, uint256 fee) external onlyTimelock {
+        premiumServiceFees[serviceId] = fee;
+        emit PremiumServiceFeeSet(serviceId, fee);
+    }
+
+    function payPremiumService(bytes32 serviceId) external {
+        uint256 fee = premiumServiceFees[serviceId];
+        require(fee > 0, "Service not available");
+        require(treasuryVault != address(0), "TreasuryVault not set");
+        _transfer(msg.sender, treasuryVault, fee);
+        emit PremiumServicePaid(msg.sender, serviceId, fee);
     }
 }
