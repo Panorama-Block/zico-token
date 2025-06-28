@@ -3,7 +3,7 @@
 ## ✅ O que foi criado
 
 ### 🏗️ Smart Contract (ZicoToken.sol)
-- ✅ **ERC20 Token** completo com 1M tokens iniciais
+- ✅ **ERC20 Token** completo com 1B tokens iniciais
 - ✅ **Sistema de Staking** com recompensas proporcionais
 - ✅ **Cross-Chain Bridge** usando Chainlink CCIP
 - ✅ **Loteria Aleatória** com Chainlink VRF
