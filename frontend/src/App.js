@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import toast, { Toaster } from 'react-hot-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
+
+// Import assets
+import bridgeIcon from './assets/bridge.png';
+import stakingIcon from './assets/staking.png';
+import swapIcon from './assets/swap.png';
+// import panoramaLogo from './assets/logo.png';
+import panoramaLogoBig from './assets/logo-grande.png';
 
 // ABI do contrato ZicoToken
 const ZICO_TOKEN_ABI = [
@@ -40,7 +47,7 @@ function App() {
   const [totalStaked, setTotalStaked] = useState('0');
   const [isOwner, setIsOwner] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [activeTab, setActiveTab] = useState('swap');
+  const [activeTab, setActiveTab] = useState('transfer');
   
   // Form states
   const [transferTo, setTransferTo] = useState('');
@@ -212,11 +219,12 @@ function App() {
     try {
       const tx = await contract.requestRandomReward(ethers.utils.parseEther(lotteryAmount));
       toast.promise(tx.wait(), {
-        loading: 'Starting lottery...',
-        success: 'Lottery started!',
-        error: 'Lottery failed!'
+        loading: 'Requesting random reward...',
+        success: 'Random reward requested!',
+        error: 'Request failed!'
       });
       await tx.wait();
+      loadData();
       setLotteryAmount('');
     } catch (error) {
       toast.error('Error: ' + error.message);
@@ -225,274 +233,307 @@ function App() {
 
   const formatNumber = (num) => {
     const number = parseFloat(num);
-    if (number === 0) return '0';
-    if (number < 0.01) return '<0.01';
-    if (number >= 1000000) return (number / 1000000).toFixed(2) + 'M';
-    if (number >= 1000) return (number / 1000).toFixed(2) + 'K';
+    if (number >= 1000000) {
+      return (number / 1000000).toFixed(2) + 'M';
+    } else if (number >= 1000) {
+      return (number / 1000).toFixed(2) + 'K';
+    }
     return number.toFixed(4);
   };
 
+  const chainNames = {
+    '43114': 'Avalanche',
+    '42161': 'Arbitrum',
+    '137': 'Polygon'
+  };
+
+  const tabs = [
+    { id: 'transfer', label: 'Transfer', icon: swapIcon },
+    { id: 'stake', label: 'Stake', icon: stakingIcon },
+    { id: 'bridge', label: 'Bridge', icon: bridgeIcon },
+    { id: 'admin', label: 'Admin', icon: null }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      <Toaster position="top-right" />
-      
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="grid-background"></div>
+      <div className="panorama-bg">
+        <img src={panoramaLogoBig} alt="Zico Token" />
+      </div>
+
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">Z</span>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Zico AI Token
+      <header className="relative z-10 border-b border-cyan/20 bg-black/50 backdrop-blur-lg">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src={panoramaLogoBig} alt="Zico Token" className="h-12 w-8" />
+              <h1 className="text-2xl font-bold text-cyan">
+  
               </h1>
             </div>
             
-            {account ? (
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:flex items-center space-x-4 text-sm">
-                  <span className="text-gray-600">{formatNumber(balance)} ZICO</span>
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                </div>
-                <div className="px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium">
-                  {account.slice(0, 6)}...{account.slice(-4)}
-                </div>
-              </div>
-            ) : (
-              <Button 
-                onClick={connectWallet} 
+            {!account ? (
+              <Button
+                onClick={connectWallet}
                 disabled={isConnecting}
-                className="px-6 py-2"
+                className="cyber-button px-8 py-3 rounded-lg font-semibold"
               >
                 {isConnecting ? 'Connecting...' : 'Connect Wallet'}
               </Button>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-cyan">
+                  {account.substring(0, 6)}...{account.substring(38)}
+                </div>
+                <div className="h-3 w-3 bg-cyan rounded-full pulse-cyan"></div>
+              </div>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/60 backdrop-blur-md border-white/20">
-            <CardHeader className="pb-2">
-              <CardDescription className="text-gray-600">Your Balance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatNumber(balance)}</div>
-              <div className="text-sm text-gray-500">ZICO</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/60 backdrop-blur-md border-white/20">
-            <CardHeader className="pb-2">
-              <CardDescription className="text-gray-600">Staked</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{formatNumber(stakedAmount)}</div>
-              <div className="text-sm text-gray-500">ZICO</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/60 backdrop-blur-md border-white/20">
-            <CardHeader className="pb-2">
-              <CardDescription className="text-gray-600">Rewards</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{formatNumber(rewards)}</div>
-              <div className="text-sm text-gray-500">ZICO</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/60 backdrop-blur-md border-white/20">
-            <CardHeader className="pb-2">
-              <CardDescription className="text-gray-600">Total Staked</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{formatNumber(totalStaked)}</div>
-              <div className="text-sm text-gray-500">ZICO</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-2xl mx-auto">
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-md p-1 rounded-xl mb-6 border border-white/20">
-            {[
-              { id: 'swap', label: 'Transfer', icon: '💸' },
-              { id: 'stake', label: 'Stake', icon: '🔒' },
-              { id: 'bridge', label: 'Bridge', icon: '🌉' },
-              ...(isOwner ? [{ id: 'admin', label: 'Admin', icon: '⚡' }] : [])
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-white shadow-md text-purple-600'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
+      {/* Main Content */}
+      <main className="relative z-10 container mx-auto px-6 py-8">
+        {/* Stats Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Balance</p>
+                <p className="text-2xl font-bold text-cyan">{account ? formatNumber(balance) : '0.00'}</p>
+                <p className="text-xs text-gray-500">ZICO</p>
+              </div>
+              <div className="h-12 w-12 bg-cyan/10 rounded-xl flex items-center justify-center">
+                <div className="h-6 w-6 bg-cyan rounded-full glow-animation"></div>
+              </div>
+            </div>
           </div>
 
-          {/* Tab Content */}
-          <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl">
-            {activeTab === 'swap' && (
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
               <div>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <span className="mr-2">💸</span>
-                    Transfer Tokens
-                  </CardTitle>
-                  <CardDescription>Send ZICO tokens to any address</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                <p className="text-sm text-gray-400">Staked</p>
+                <p className="text-2xl font-bold text-cyan">{account ? formatNumber(stakedAmount) : '0.00'}</p>
+                <p className="text-xs text-gray-500">ZICO</p>
+              </div>
+              <div className="h-12 w-12 bg-cyan/10 rounded-xl flex items-center justify-center">
+                <img src={stakingIcon} alt="Staking" className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Rewards</p>
+                <p className="text-2xl font-bold text-cyan">{account ? formatNumber(rewards) : '0.00'}</p>
+                <p className="text-xs text-gray-500">ZICO</p>
+              </div>
+              <div className="h-12 w-12 bg-cyan/10 rounded-xl flex items-center justify-center">
+                <div className="h-6 w-6 bg-gradient-cyber rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Staked</p>
+                <p className="text-2xl font-bold text-cyan">{account ? formatNumber(totalStaked) : '0.00'}</p>
+                <p className="text-xs text-gray-500">ZICO</p>
+              </div>
+              <div className="h-12 w-12 bg-cyan/10 rounded-xl flex items-center justify-center">
+                <div className="h-6 w-6 bg-cyan/50 rounded-full pulse-cyan"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab-button flex items-center space-x-2 ${
+                activeTab === tab.id ? 'active' : ''
+              }`}
+              disabled={!account && tab.id !== 'transfer'}
+            >
+              {tab.icon && <img src={tab.icon} alt={tab.label} className="h-4 w-4" />}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="glass-card p-8 rounded-xl">
+          {!account && (
+            <div className="text-center py-8 mb-6">
+              <p className="text-gray-400 mb-4">Connect your wallet to access all features</p>
+            </div>
+          )}
+
+          {activeTab === 'transfer' && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <img src={swapIcon} alt="Transfer" className="h-8 w-8" />
+                <h2 className="text-2xl font-bold text-cyan">Transfer Tokens</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Recipient Address
                     </label>
                     <Input
+                      type="text"
                       placeholder="0x..."
                       value={transferTo}
                       onChange={(e) => setTransferTo(e.target.value)}
+                      className="cyber-input w-full"
+                      disabled={!account}
                     />
                   </div>
+                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Amount
                     </label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        placeholder="0.0"
-                        value={transferAmount}
-                        onChange={(e) => setTransferAmount(e.target.value)}
-                        className="pr-16"
-                      />
-                      <div className="absolute right-3 top-3 text-sm font-medium text-gray-500">
-                        ZICO
-                      </div>
+                    <Input
+                      type="number"
+                      placeholder="0.0"
+                      value={transferAmount}
+                      onChange={(e) => setTransferAmount(e.target.value)}
+                      className="cyber-input w-full"
+                      disabled={!account}
+                    />
+                  </div>
+                  
+                  <Button
+                    onClick={handleTransfer}
+                    className="cyber-button w-full py-3"
+                    disabled={!account || !transferTo || !transferAmount}
+                  >
+                    Transfer Tokens
+                  </Button>
+                </div>
+                
+                <div className="bg-black/30 rounded-lg p-6 border border-cyan/20">
+                  <h3 className="text-lg font-semibold text-cyan mb-4">Transfer Info</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Available Balance:</span>
+                      <span className="text-white">{account ? formatNumber(balance) : '0.00'} ZICO</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Network:</span>
+                      <span className="text-white">Local Testnet</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'stake' && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <img src={stakingIcon} alt="Staking" className="h-8 w-8" />
+                <h2 className="text-2xl font-bold text-cyan">Staking Portal</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Stake */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan">Stake Tokens</h3>
+                  <Input
+                    type="number"
+                    placeholder="Amount to stake"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    className="cyber-input w-full"
+                    disabled={!account}
+                  />
+                  <Button
+                    onClick={handleStake}
+                    className="cyber-button w-full"
+                    disabled={!account || !stakeAmount}
+                  >
+                    Stake
+                  </Button>
+                </div>
+
+                {/* Unstake */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan">Unstake Tokens</h3>
+                  <Input
+                    type="number"
+                    placeholder="Amount to unstake"
+                    value={unstakeAmount}
+                    onChange={(e) => setUnstakeAmount(e.target.value)}
+                    className="cyber-input w-full"
+                    disabled={!account}
+                  />
+                  <Button
+                    onClick={handleUnstake}
+                    className="cyber-button w-full"
+                    disabled={!account || !unstakeAmount}
+                  >
+                    Unstake
+                  </Button>
+                </div>
+
+                {/* Rewards */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan">Claim Rewards</h3>
+                  <div className="bg-black/30 rounded-lg p-4 border border-cyan/20">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-cyan">{account ? formatNumber(rewards) : '0.00'}</p>
+                      <p className="text-sm text-gray-400">Available Rewards</p>
                     </div>
                   </div>
                   <Button
-                    onClick={handleTransfer}
-                    disabled={!transferTo || !transferAmount || !account}
-                    className="w-full h-12 text-lg"
+                    onClick={handleClaimRewards}
+                    className="cyber-button w-full"
+                    disabled={!account || parseFloat(rewards) === 0}
                   >
-                    Transfer
+                    Claim Rewards
                   </Button>
-                </CardContent>
+                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'stake' && (
-              <div>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <span className="mr-2">🔒</span>
-                    Staking Pool
-                  </CardTitle>
-                  <CardDescription>Stake ZICO tokens to earn rewards</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Stake Amount
-                      </label>
-                      <div className="space-y-2">
-                        <Input
-                          type="number"
-                          placeholder="0.0"
-                          value={stakeAmount}
-                          onChange={(e) => setStakeAmount(e.target.value)}
-                        />
-                        <Button
-                          onClick={handleStake}
-                          disabled={!stakeAmount || !account}
-                          variant="secondary"
-                          className="w-full"
-                        >
-                          Stake
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Unstake Amount
-                      </label>
-                      <div className="space-y-2">
-                        <Input
-                          type="number"
-                          placeholder="0.0"
-                          value={unstakeAmount}
-                          onChange={(e) => setUnstakeAmount(e.target.value)}
-                        />
-                        <Button
-                          onClick={handleUnstake}
-                          disabled={!unstakeAmount || !account}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          Unstake
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-sm font-medium text-gray-700">
-                        Claimable Rewards
-                      </span>
-                      <span className="text-lg font-bold text-purple-600">
-                        {formatNumber(rewards)} ZICO
-                      </span>
-                    </div>
-                    <Button
-                      onClick={handleClaimRewards}
-                      disabled={parseFloat(rewards) === 0 || !account}
-                      className="w-full h-12"
-                    >
-                      Claim Rewards
-                    </Button>
-                  </div>
-                </CardContent>
+          {activeTab === 'bridge' && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <img src={bridgeIcon} alt="Bridge" className="h-8 w-8" />
+                <h2 className="text-2xl font-bold text-cyan">Cross-Chain Bridge</h2>
               </div>
-            )}
-
-            {activeTab === 'bridge' && (
-              <div>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <span className="mr-2">🌉</span>
-                    Cross-Chain Bridge
-                  </CardTitle>
-                  <CardDescription>Transfer tokens across different blockchains</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Destination Chain
                     </label>
                     <select
                       value={crossChainDestination}
                       onChange={(e) => setCrossChainDestination(e.target.value)}
-                      className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                      className="cyber-input w-full"
+                      disabled={!account}
                     >
-                      <option value="43114">🔺 Avalanche</option>
-                      <option value="137">🟣 Polygon</option>
-                      <option value="42161">🔷 Arbitrum</option>
+                      <option value="43114">Avalanche</option>
+                      <option value="42161">Arbitrum</option>
+                      <option value="137">Polygon</option>
                     </select>
                   </div>
+                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Amount
                     </label>
                     <Input
@@ -500,80 +541,104 @@ function App() {
                       placeholder="0.0"
                       value={crossChainAmount}
                       onChange={(e) => setCrossChainAmount(e.target.value)}
+                      className="cyber-input w-full"
+                      disabled={!account}
                     />
                   </div>
+                  
                   <Button
                     onClick={handleCrossChain}
-                    disabled={!crossChainAmount || !account}
-                    className="w-full h-12 text-lg"
+                    className="cyber-button w-full py-3"
+                    disabled={!account || !crossChainAmount}
                   >
-                    Bridge Tokens
+                    Bridge to {chainNames[crossChainDestination]}
                   </Button>
-                </CardContent>
-              </div>
-            )}
-
-            {activeTab === 'admin' && isOwner && (
-              <div>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <span className="mr-2">⚡</span>
-                    Admin Functions
-                  </CardTitle>
-                  <CardDescription>Manage rewards and lottery system</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button
-                    onClick={handleDistributeRewards}
-                    variant="secondary"
-                    className="w-full h-12"
-                  >
-                    📊 Distribute Rewards to All Stakers
-                  </Button>
-                  
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Lottery Reward Amount
-                    </label>
-                    <div className="flex space-x-2">
-                      <Input
-                        type="number"
-                        placeholder="Reward amount"
-                        value={lotteryAmount}
-                        onChange={(e) => setLotteryAmount(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        onClick={handleLottery}
-                        disabled={!lotteryAmount}
-                        className="px-6"
-                      >
-                        🎲 Start Lottery
-                      </Button>
+                </div>
+                
+                <div className="bg-black/30 rounded-lg p-6 border border-cyan/20">
+                  <h3 className="text-lg font-semibold text-cyan mb-4">Bridge Info</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">From:</span>
+                      <span className="text-white">Local Testnet</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">To:</span>
+                      <span className="text-white">{chainNames[crossChainDestination]}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Estimated Time:</span>
+                      <span className="text-white">~5-10 minutes</span>
                     </div>
                   </div>
-                </CardContent>
-              </div>
-            )}
-          </Card>
-
-          {/* Instructions for new users */}
-          {!account && (
-            <Card className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="text-blue-800">🚀 Getting Started</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-blue-700">
-                  <p>• Connect your MetaMask wallet</p>
-                  <p>• Make sure you're on Anvil Local network (Chain ID: 31337)</p>
-                  <p>• Import the test account for instant access to ZICO tokens</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'admin' && account && isOwner && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-cyan">Admin Functions</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan">Reward Distribution</h3>
+                  <Button
+                    onClick={handleDistributeRewards}
+                    className="cyber-button w-full"
+                    disabled={!account}
+                  >
+                    Distribute Rewards
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan">Random Lottery</h3>
+                  <Input
+                    type="number"
+                    placeholder="Reward amount"
+                    value={lotteryAmount}
+                    onChange={(e) => setLotteryAmount(e.target.value)}
+                    className="cyber-input w-full"
+                    disabled={!account}
+                  />
+                  <Button
+                    onClick={handleLottery}
+                    className="cyber-button w-full"
+                    disabled={!account || !lotteryAmount}
+                  >
+                    Start Random Lottery
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'admin' && account && !isOwner && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Admin access required</p>
+            </div>
+          )}
+
+          {activeTab === 'admin' && !account && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Connect wallet to access admin functions</p>
+            </div>
           )}
         </div>
-      </div>
+      </main>
+
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(26, 26, 26, 0.9)',
+            color: '#ffffff',
+            border: '1px solid rgba(0, 255, 255, 0.3)',
+            borderRadius: '8px',
+          },
+        }}
+      />
     </div>
   );
 }
