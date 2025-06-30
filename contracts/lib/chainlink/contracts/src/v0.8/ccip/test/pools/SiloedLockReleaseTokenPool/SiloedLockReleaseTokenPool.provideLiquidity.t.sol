@@ -6,36 +6,36 @@ import {TokenPool} from "../../../pools/TokenPool.sol";
 import {SiloedLockReleaseTokenPoolSetup} from "./SiloedLockReleaseTokenPoolSetup.t.sol";
 
 contract SiloedLockReleaseTokenPool_provideLiquidity is SiloedLockReleaseTokenPoolSetup {
-  address public UNAUTHORIZED_ADDRESS = address(0xdeadbeef);
+    address public UNAUTHORIZED_ADDRESS = address(0xdeadbeef);
 
-  function setUp() public override {
-    super.setUp();
-  }
+    function setUp() public override {
+        super.setUp();
+    }
 
-  function test_provideLiquidity() public {
-    uint256 amount = 1e24;
+    function test_provideLiquidity() public {
+        uint256 amount = 1e24;
 
-    vm.expectEmit();
-    emit SiloedLockReleaseTokenPool.LiquidityAdded(0, OWNER, amount);
+        vm.expectEmit();
+        emit SiloedLockReleaseTokenPool.LiquidityAdded(0, OWNER, amount);
 
-    s_siloedLockReleaseTokenPool.provideLiquidity(amount);
+        s_siloedLockReleaseTokenPool.provideLiquidity(amount);
 
-    assertEq(s_token.balanceOf(address(s_siloedLockReleaseTokenPool)), amount);
+        assertEq(s_token.balanceOf(address(s_siloedLockReleaseTokenPool)), amount);
 
-    // Since the funds for the destination chain are not siloed,
-    // the locked token amount should not be increased
-    assertEq(s_siloedLockReleaseTokenPool.getAvailableTokens(DEST_CHAIN_SELECTOR), amount);
-    assertEq(s_siloedLockReleaseTokenPool.getUnsiloedLiquidity(), amount);
-    assertEq(s_siloedLockReleaseTokenPool.getAvailableTokens(SILOED_CHAIN_SELECTOR), 0);
-  }
+        // Since the funds for the destination chain are not siloed,
+        // the locked token amount should not be increased
+        assertEq(s_siloedLockReleaseTokenPool.getAvailableTokens(DEST_CHAIN_SELECTOR), amount);
+        assertEq(s_siloedLockReleaseTokenPool.getUnsiloedLiquidity(), amount);
+        assertEq(s_siloedLockReleaseTokenPool.getAvailableTokens(SILOED_CHAIN_SELECTOR), 0);
+    }
 
-  // Reverts
+    // Reverts
 
-  function test_RevertWhen_Unauthorized() public {
-    vm.startPrank(UNAUTHORIZED_ADDRESS);
+    function test_RevertWhen_Unauthorized() public {
+        vm.startPrank(UNAUTHORIZED_ADDRESS);
 
-    vm.expectRevert(abi.encodeWithSelector(TokenPool.Unauthorized.selector, UNAUTHORIZED_ADDRESS));
+        vm.expectRevert(abi.encodeWithSelector(TokenPool.Unauthorized.selector, UNAUTHORIZED_ADDRESS));
 
-    s_siloedLockReleaseTokenPool.provideLiquidity(1);
-  }
+        s_siloedLockReleaseTokenPool.provideLiquidity(1);
+    }
 }

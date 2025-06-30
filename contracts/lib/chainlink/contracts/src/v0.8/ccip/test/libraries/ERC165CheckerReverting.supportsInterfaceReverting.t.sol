@@ -9,36 +9,36 @@ import {MaybeRevertMessageReceiver} from "../helpers/receivers/MaybeRevertMessag
 import {Test} from "forge-std/Test.sol";
 
 contract ERC165CheckerReverting_supportsInterfaceReverting is Test {
-  using ERC165CheckerReverting for address;
+    using ERC165CheckerReverting for address;
 
-  address internal s_receiver;
+    address internal s_receiver;
 
-  bytes4 internal constant EXAMPLE_INTERFACE_ID = 0xdeadbeef;
+    bytes4 internal constant EXAMPLE_INTERFACE_ID = 0xdeadbeef;
 
-  error InsufficientGasForStaticCall();
+    error InsufficientGasForStaticCall();
 
-  constructor() {
-    s_receiver = address(new MaybeRevertMessageReceiver(false));
-  }
+    constructor() {
+        s_receiver = address(new MaybeRevertMessageReceiver(false));
+    }
 
-  function test__supportsInterfaceReverting() public view {
-    assertTrue(s_receiver._supportsInterfaceReverting(type(IAny2EVMMessageReceiver).interfaceId));
-  }
+    function test__supportsInterfaceReverting() public view {
+        assertTrue(s_receiver._supportsInterfaceReverting(type(IAny2EVMMessageReceiver).interfaceId));
+    }
 
-  // Reverts
+    // Reverts
 
-  function test__supportsInterfaceReverting_RevertWhen_NotEnoughGasForSupportsInterface() public {
-    vm.expectRevert(InsufficientGasForStaticCall.selector);
+    function test__supportsInterfaceReverting_RevertWhen_NotEnoughGasForSupportsInterface() public {
+        vm.expectRevert(InsufficientGasForStaticCall.selector);
 
-    // Library calls cannot be called with gas limit overrides, so a public function must be exposed
-    // instead which can proxy the call to the library.
+        // Library calls cannot be called with gas limit overrides, so a public function must be exposed
+        // instead which can proxy the call to the library.
 
-    // The gas limit was chosen so that after overhead, <31k would remain to trigger the error.
-    this.invokeERC165Checker{gas: 33_000}();
-  }
+        // The gas limit was chosen so that after overhead, <31k would remain to trigger the error.
+        this.invokeERC165Checker{gas: 33_000}();
+    }
 
-  // Meant to test the call with a manual gas limit override
-  function invokeERC165Checker() external view {
-    s_receiver._supportsInterfaceReverting(EXAMPLE_INTERFACE_ID);
-  }
+    // Meant to test the call with a manual gas limit override
+    function invokeERC165Checker() external view {
+        s_receiver._supportsInterfaceReverting(EXAMPLE_INTERFACE_ID);
+    }
 }

@@ -2,5 +2,14 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+ignored_paths = [
+  "lib/**/test",
+  "lib/**/tests",
+  "lib/**/certora",
+  "lib/**/harnesses"
+]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

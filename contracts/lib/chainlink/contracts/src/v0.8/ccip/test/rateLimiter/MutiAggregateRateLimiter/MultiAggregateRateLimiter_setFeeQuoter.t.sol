@@ -7,27 +7,27 @@ import {MultiAggregateRateLimiter} from "../../../MultiAggregateRateLimiter.sol"
 import {MultiAggregateRateLimiterSetup} from "./MultiAggregateRateLimiterSetup.t.sol";
 
 contract MultiAggregateRateLimiter_setFeeQuoter is MultiAggregateRateLimiterSetup {
-  function test_Owner() public {
-    address newAddress = address(42);
+    function test_Owner() public {
+        address newAddress = address(42);
 
-    vm.expectEmit();
-    emit MultiAggregateRateLimiter.FeeQuoterSet(newAddress);
+        vm.expectEmit();
+        emit MultiAggregateRateLimiter.FeeQuoterSet(newAddress);
 
-    s_rateLimiter.setFeeQuoter(newAddress);
-    assertEq(newAddress, s_rateLimiter.getFeeQuoter());
-  }
+        s_rateLimiter.setFeeQuoter(newAddress);
+        assertEq(newAddress, s_rateLimiter.getFeeQuoter());
+    }
 
-  // Reverts
+    // Reverts
 
-  function test_RevertWhen_OnlyOwner() public {
-    vm.startPrank(STRANGER);
-    vm.expectRevert(Ownable2Step.OnlyCallableByOwner.selector);
+    function test_RevertWhen_OnlyOwner() public {
+        vm.startPrank(STRANGER);
+        vm.expectRevert(Ownable2Step.OnlyCallableByOwner.selector);
 
-    s_rateLimiter.setFeeQuoter(STRANGER);
-  }
+        s_rateLimiter.setFeeQuoter(STRANGER);
+    }
 
-  function test_RevertWhen_ZeroAddress() public {
-    vm.expectRevert(AuthorizedCallers.ZeroAddressNotAllowed.selector);
-    s_rateLimiter.setFeeQuoter(address(0));
-  }
+    function test_RevertWhen_ZeroAddress() public {
+        vm.expectRevert(AuthorizedCallers.ZeroAddressNotAllowed.selector);
+        s_rateLimiter.setFeeQuoter(address(0));
+    }
 }

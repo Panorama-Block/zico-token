@@ -4,16 +4,16 @@ import {ConfirmedOwner} from "../../shared/access/ConfirmedOwner.sol";
 
 // solhint-disable
 contract Greeter is ConfirmedOwner {
-  string public greeting;
+    string public greeting;
 
-  constructor(address owner) ConfirmedOwner(owner) {}
+    constructor(address owner) ConfirmedOwner(owner) {}
 
-  function setGreeting(string calldata _greeting) external onlyOwner {
-    require(bytes(_greeting).length > 0, "Invalid greeting length");
-    greeting = _greeting;
-  }
+    function setGreeting(string calldata _greeting) external onlyOwner {
+        require(bytes(_greeting).length > 0, "Invalid greeting length");
+        greeting = _greeting;
+    }
 
-  function triggerRevert() external pure {
-    require(false, "Greeter: revert triggered");
-  }
+    function triggerRevert() external pure {
+        require(false, "Greeter: revert triggered");
+    }
 }

@@ -5,7 +5,13 @@ import {Test} from "forge-std/Test.sol";
 import {AccountERC7702Mock} from "@openzeppelin/contracts/mocks/account/AccountMock.sol";
 import {CallReceiverMock} from "@openzeppelin/contracts/mocks/CallReceiverMock.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {ERC7579Utils, Execution, Mode, ModeSelector, ModePayload} from "@openzeppelin/contracts/account/utils/draft-ERC7579Utils.sol";
+import {
+    ERC7579Utils,
+    Execution,
+    Mode,
+    ModeSelector,
+    ModePayload
+} from "@openzeppelin/contracts/account/utils/draft-ERC7579Utils.sol";
 import {ERC4337Utils, IEntryPointExtra} from "@openzeppelin/contracts/account/utils/draft-ERC4337Utils.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {PackedUserOperation} from "@openzeppelin/contracts/interfaces/draft-IERC4337.sol";
@@ -49,9 +55,7 @@ contract AccountERC7702Test is Test {
     function testExecuteBatch(uint256 argA, uint256 argB) public {
         // Create the mode for batch execution
         Mode mode = ERC7579Utils.CALLTYPE_BATCH.encodeMode(
-            ERC7579Utils.EXECTYPE_DEFAULT,
-            ModeSelector.wrap(0x00000000),
-            ModePayload.wrap(0x00000000)
+            ERC7579Utils.EXECTYPE_DEFAULT, ModeSelector.wrap(0x00000000), ModePayload.wrap(0x00000000)
         );
 
         Execution[] memory execution = new Execution[](2);
@@ -79,10 +83,8 @@ contract AccountERC7702Test is Test {
             paymasterAndData: bytes(""),
             signature: bytes("")
         });
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            _signerPrivateKey,
-            IEntryPointExtra(address(ERC4337Utils.ENTRYPOINT_V08)).getUserOpHash(ops[0])
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(_signerPrivateKey, IEntryPointExtra(address(ERC4337Utils.ENTRYPOINT_V08)).getUserOpHash(ops[0]));
         ops[0].signature = abi.encodePacked(r, s, v);
 
         // Expect the events to be emitted

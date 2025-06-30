@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import {ConfirmedOwner} from "../../access/ConfirmedOwner.sol";
 
 contract ConfirmedOwnerTestHelper is ConfirmedOwner {
-  event Here();
+    event Here();
 
-  constructor() ConfirmedOwner(msg.sender) {}
+    constructor() ConfirmedOwner(msg.sender) {}
 
-  function modifierOnlyOwner() public onlyOwner {
-    emit Here();
-  }
+    function modifierOnlyOwner() public onlyOwner {
+        emit Here();
+    }
 }

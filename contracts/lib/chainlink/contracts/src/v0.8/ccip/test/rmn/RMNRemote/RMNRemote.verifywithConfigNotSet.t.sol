@@ -8,11 +8,11 @@ import {RMNRemote} from "../../../rmn/RMNRemote.sol";
 import {RMNRemoteSetup} from "./RMNRemoteSetup.t.sol";
 
 contract RMNRemote_verify_withConfigNotSet is RMNRemoteSetup {
-  function test_RevertWhen_verifys() public {
-    Internal.MerkleRoot[] memory merkleRoots = new Internal.MerkleRoot[](0);
-    IRMNRemote.Signature[] memory signatures = new IRMNRemote.Signature[](0);
+    function test_RevertWhen_verifys() public {
+        Internal.MerkleRoot[] memory merkleRoots = new Internal.MerkleRoot[](0);
+        IRMNRemote.Signature[] memory signatures = new IRMNRemote.Signature[](0);
 
-    vm.expectRevert(RMNRemote.ConfigNotSet.selector);
-    s_rmnRemote.verify(OFF_RAMP_ADDRESS, merkleRoots, signatures);
-  }
+        vm.expectRevert(RMNRemote.ConfigNotSet.selector);
+        s_rmnRemote.verify(OFF_RAMP_ADDRESS, merkleRoots, signatures);
+    }
 }

@@ -42,7 +42,7 @@ function App() {
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState('');
   const [balance, setBalance] = useState('0');
-  const [stakedAmount, setStakedAmount] = useState('0');
+  const [staked, setStaked] = useState('0');
   const [rewards, setRewards] = useState('0');
   const [totalStaked, setTotalStaked] = useState('0');
   const [isOwner, setIsOwner] = useState(false);
@@ -643,4 +643,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

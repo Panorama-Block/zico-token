@@ -7,11 +7,11 @@ pragma solidity 0.8.6;
  * https://developer.arbitrum.io/arbos/precompiles#ArbSys
  */
 contract MockArbSys {
-  function arbBlockNumber() public view returns (uint256) {
-    return block.number;
-  }
+    function arbBlockNumber() public view returns (uint256) {
+        return block.number;
+    }
 
-  function arbBlockHash(uint256 arbBlockNum) external view returns (bytes32) {
-    return blockhash(arbBlockNum);
-  }
+    function arbBlockHash(uint256 arbBlockNum) external view returns (bytes32) {
+        return blockhash(arbBlockNum);
+    }
 }

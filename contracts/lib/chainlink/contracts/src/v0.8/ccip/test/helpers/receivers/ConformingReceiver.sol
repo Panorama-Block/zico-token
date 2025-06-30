@@ -5,13 +5,11 @@ import {CCIPReceiver} from "../../../applications/CCIPReceiver.sol";
 import {Client} from "../../../libraries/Client.sol";
 
 contract ConformingReceiver is CCIPReceiver {
-  event MessageReceived();
+    event MessageReceived();
 
-  constructor(address router, address feeToken) CCIPReceiver(router) {}
+    constructor(address router, address feeToken) CCIPReceiver(router) {}
 
-  function _ccipReceive(
-    Client.Any2EVMMessage memory
-  ) internal virtual override {
-    emit MessageReceived();
-  }
+    function _ccipReceive(Client.Any2EVMMessage memory) internal virtual override {
+        emit MessageReceived();
+    }
 }

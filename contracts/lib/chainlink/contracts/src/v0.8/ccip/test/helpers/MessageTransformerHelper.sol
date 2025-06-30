@@ -7,36 +7,38 @@ import {Internal} from "../../libraries/Internal.sol";
 
 // @dev This helper is used to test the On/OffRamps
 contract MessageTransformerHelper is IMessageTransformer {
-  error UnknownChain();
+    error UnknownChain();
 
-  bool public s_shouldRevert;
+    bool public s_shouldRevert;
 
-  /// @dev Set whether the transformer should revert
-  function setShouldRevert(
-    bool _shouldRevert
-  ) external {
-    s_shouldRevert = _shouldRevert;
-  }
-
-  /// @inheritdoc IMessageTransformer
-  function transformOutboundMessage(
-    Internal.EVM2AnyRampMessage memory message
-  ) public view returns (Internal.EVM2AnyRampMessage memory) {
-    if (s_shouldRevert) {
-      revert UnknownChain();
+    /// @dev Set whether the transformer should revert
+    function setShouldRevert(bool _shouldRevert) external {
+        s_shouldRevert = _shouldRevert;
     }
-    message.data = abi.encodePacked("transformedData", message.data);
-    return message;
-  }
 
-  /// @inheritdoc IMessageTransformer
-  function transformInboundMessage(
-    Internal.Any2EVMRampMessage memory message
-  ) public view returns (Internal.Any2EVMRampMessage memory) {
-    if (s_shouldRevert) {
-      revert UnknownChain();
+    /// @inheritdoc IMessageTransformer
+    function transformOutboundMessage(Internal.EVM2AnyRampMessage memory message)
+        public
+        view
+        returns (Internal.EVM2AnyRampMessage memory)
+    {
+        if (s_shouldRevert) {
+            revert UnknownChain();
+        }
+        message.data = abi.encodePacked("transformedData", message.data);
+        return message;
     }
-    message.data = abi.encodePacked("transformedData", message.data);
-    return message;
-  }
+
+    /// @inheritdoc IMessageTransformer
+    function transformInboundMessage(Internal.Any2EVMRampMessage memory message)
+        public
+        view
+        returns (Internal.Any2EVMRampMessage memory)
+    {
+        if (s_shouldRevert) {
+            revert UnknownChain();
+        }
+        message.data = abi.encodePacked("transformedData", message.data);
+        return message;
+    }
 }

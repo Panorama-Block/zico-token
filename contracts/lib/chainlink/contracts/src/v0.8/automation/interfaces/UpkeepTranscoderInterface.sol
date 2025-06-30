@@ -5,9 +5,8 @@ import {UpkeepFormat} from "../UpkeepFormat.sol";
 
 // solhint-disable-next-line interface-starts-with-i
 interface UpkeepTranscoderInterface {
-  function transcodeUpkeeps(
-    UpkeepFormat fromVersion,
-    UpkeepFormat toVersion,
-    bytes calldata encodedUpkeeps
-  ) external view returns (bytes memory);
+    function transcodeUpkeeps(UpkeepFormat fromVersion, UpkeepFormat toVersion, bytes calldata encodedUpkeeps)
+        external
+        view
+        returns (bytes memory);
 }

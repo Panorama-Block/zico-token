@@ -11,57 +11,55 @@ import {IVRFCoordinatorV2Plus} from "./IVRFCoordinatorV2Plus.sol";
 // are public. This is OK because IVRFCoordinatorV2PlusInternal doesn't have any solidity
 // use case. It is only used to generate gethwrappers
 interface IVRFCoordinatorV2PlusInternal is IVRFCoordinatorV2Plus {
-  event RandomWordsRequested(
-    bytes32 indexed keyHash,
-    uint256 requestId,
-    uint256 preSeed,
-    uint256 indexed subId,
-    uint16 minimumRequestConfirmations,
-    uint32 callbackGasLimit,
-    uint32 numWords,
-    bytes extraArgs,
-    address indexed sender
-  );
+    event RandomWordsRequested(
+        bytes32 indexed keyHash,
+        uint256 requestId,
+        uint256 preSeed,
+        uint256 indexed subId,
+        uint16 minimumRequestConfirmations,
+        uint32 callbackGasLimit,
+        uint32 numWords,
+        bytes extraArgs,
+        address indexed sender
+    );
 
-  event RandomWordsFulfilled(
-    uint256 indexed requestId,
-    uint256 outputSeed,
-    uint256 indexed subId,
-    uint96 payment,
-    bool success,
-    bool onlyPremium
-  );
+    event RandomWordsFulfilled(
+        uint256 indexed requestId,
+        uint256 outputSeed,
+        uint256 indexed subId,
+        uint96 payment,
+        bool success,
+        bool onlyPremium
+    );
 
-  struct RequestCommitment {
-    uint64 blockNum;
-    uint256 subId;
-    uint32 callbackGasLimit;
-    uint32 numWords;
-    address sender;
-    bytes extraArgs;
-  }
+    struct RequestCommitment {
+        uint64 blockNum;
+        uint256 subId;
+        uint32 callbackGasLimit;
+        uint32 numWords;
+        address sender;
+        bytes extraArgs;
+    }
 
-  struct Proof {
-    uint256[2] pk;
-    uint256[2] gamma;
-    uint256 c;
-    uint256 s;
-    uint256 seed;
-    address uWitness;
-    uint256[2] cGammaWitness;
-    uint256[2] sHashWitness;
-    uint256 zInv;
-  }
+    struct Proof {
+        uint256[2] pk;
+        uint256[2] gamma;
+        uint256 c;
+        uint256 s;
+        uint256 seed;
+        address uWitness;
+        uint256[2] cGammaWitness;
+        uint256[2] sHashWitness;
+        uint256 zInv;
+    }
 
-  // solhint-disable-next-line func-name-mixedcase
-  function s_requestCommitments(uint256 requestID) external view returns (bytes32);
+    // solhint-disable-next-line func-name-mixedcase
+    function s_requestCommitments(uint256 requestID) external view returns (bytes32);
 
-  function fulfillRandomWords(
-    Proof calldata proof,
-    RequestCommitment memory rc,
-    bool onlyPremium
-  ) external returns (uint96);
+    function fulfillRandomWords(Proof calldata proof, RequestCommitment memory rc, bool onlyPremium)
+        external
+        returns (uint96);
 
-  // solhint-disable-next-line func-name-mixedcase
-  function LINK_NATIVE_FEED() external view returns (address);
+    // solhint-disable-next-line func-name-mixedcase
+    function LINK_NATIVE_FEED() external view returns (address);
 }

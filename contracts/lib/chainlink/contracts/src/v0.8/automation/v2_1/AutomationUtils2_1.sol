@@ -15,27 +15,27 @@ import {IAutomationV21PlusCommon} from "../interfaces/IAutomationV21PlusCommon.s
  * @notice structure of trigger for log triggers
  */
 struct LogTriggerConfig {
-  address contractAddress;
-  uint8 filterSelector; // denotes which topics apply to filter ex 000, 101, 111...only last 3 bits apply
-  bytes32 topic0;
-  bytes32 topic1;
-  bytes32 topic2;
-  bytes32 topic3;
+    address contractAddress;
+    uint8 filterSelector; // denotes which topics apply to filter ex 000, 101, 111...only last 3 bits apply
+    bytes32 topic0;
+    bytes32 topic1;
+    bytes32 topic2;
+    bytes32 topic3;
 }
 
 contract AutomationUtils2_1 {
-  /**
-   * @dev this can be removed as OnchainConfig is now exposed directly from the registry
-   */
-  function _onChainConfig(IAutomationV21PlusCommon.OnchainConfigLegacy memory) external {} // 0x2ff92a81
+    /**
+     * @dev this can be removed as OnchainConfig is now exposed directly from the registry
+     */
+    function _onChainConfig(IAutomationV21PlusCommon.OnchainConfigLegacy memory) external {} // 0x2ff92a81
 
-  function _report(KeeperRegistryBase2_1.Report memory) external {} // 0xe65d6546
+    function _report(KeeperRegistryBase2_1.Report memory) external {} // 0xe65d6546
 
-  function _logTriggerConfig(LogTriggerConfig memory) external {} // 0x21f373d7
+    function _logTriggerConfig(LogTriggerConfig memory) external {} // 0x21f373d7
 
-  function _logTrigger(KeeperRegistryBase2_1.LogTrigger memory) external {} // 0x1c8d8260
+    function _logTrigger(KeeperRegistryBase2_1.LogTrigger memory) external {} // 0x1c8d8260
 
-  function _conditionalTrigger(KeeperRegistryBase2_1.ConditionalTrigger memory) external {} // 0x4b6df294
+    function _conditionalTrigger(KeeperRegistryBase2_1.ConditionalTrigger memory) external {} // 0x4b6df294
 
-  function _log(Log memory) external {} // 0xe9720a49
+    function _log(Log memory) external {} // 0xe9720a49
 }

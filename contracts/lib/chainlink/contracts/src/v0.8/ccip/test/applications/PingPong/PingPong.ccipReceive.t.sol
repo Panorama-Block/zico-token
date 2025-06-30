@@ -7,24 +7,24 @@ import {Client} from "../../../libraries/Client.sol";
 import {PingPongDappSetup} from "./PingPongDappSetup.t.sol";
 
 contract PingPong_ccipReceive is PingPongDappSetup {
-  function test_CcipReceive() public {
-    Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](0);
+    function test_CcipReceive() public {
+        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](0);
 
-    uint256 pingPongNumber = 5;
+        uint256 pingPongNumber = 5;
 
-    Client.Any2EVMMessage memory message = Client.Any2EVMMessage({
-      messageId: bytes32("a"),
-      sourceChainSelector: DEST_CHAIN_SELECTOR,
-      sender: abi.encode(i_pongContract),
-      data: abi.encode(pingPongNumber),
-      destTokenAmounts: tokenAmounts
-    });
+        Client.Any2EVMMessage memory message = Client.Any2EVMMessage({
+            messageId: bytes32("a"),
+            sourceChainSelector: DEST_CHAIN_SELECTOR,
+            sender: abi.encode(i_pongContract),
+            data: abi.encode(pingPongNumber),
+            destTokenAmounts: tokenAmounts
+        });
 
-    vm.startPrank(address(s_sourceRouter));
+        vm.startPrank(address(s_sourceRouter));
 
-    vm.expectEmit();
-    emit PingPongDemo.Pong(pingPongNumber + 1);
+        vm.expectEmit();
+        emit PingPongDemo.Pong(pingPongNumber + 1);
 
-    s_pingPong.ccipReceive(message);
-  }
+        s_pingPong.ccipReceive(message);
+    }
 }

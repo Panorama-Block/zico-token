@@ -16,31 +16,31 @@
 pragma solidity ^0.8.0;
 
 interface IMessageTransmitter {
-  /// @notice Unlocks USDC tokens on the destination chain
-  /// @param message The original message on the source chain
-  ///     * Message format:
-  ///     * Field                 Bytes      Type       Index
-  ///     * version               4          uint32     0
-  ///     * sourceDomain          4          uint32     4
-  ///     * destinationDomain     4          uint32     8
-  ///     * nonce                 8          uint64     12
-  ///     * sender                32         bytes32    20
-  ///     * recipient             32         bytes32    52
-  ///     * destinationCaller     32         bytes32    84
-  ///     * messageBody           dynamic    bytes      116
-  /// param attestation A valid attestation is the concatenated 65-byte signature(s) of
-  /// exactly `thresholdSignature` signatures, in increasing order of attester address.
-  /// ***If the attester addresses recovered from signatures are not in increasing order,
-  /// signature verification will fail.***
-  /// If incorrect number of signatures or duplicate signatures are supplied,
-  /// signature verification will fail.
-  function receiveMessage(bytes calldata message, bytes calldata attestation) external returns (bool success);
+    /// @notice Unlocks USDC tokens on the destination chain
+    /// @param message The original message on the source chain
+    ///     * Message format:
+    ///     * Field                 Bytes      Type       Index
+    ///     * version               4          uint32     0
+    ///     * sourceDomain          4          uint32     4
+    ///     * destinationDomain     4          uint32     8
+    ///     * nonce                 8          uint64     12
+    ///     * sender                32         bytes32    20
+    ///     * recipient             32         bytes32    52
+    ///     * destinationCaller     32         bytes32    84
+    ///     * messageBody           dynamic    bytes      116
+    /// param attestation A valid attestation is the concatenated 65-byte signature(s) of
+    /// exactly `thresholdSignature` signatures, in increasing order of attester address.
+    /// ***If the attester addresses recovered from signatures are not in increasing order,
+    /// signature verification will fail.***
+    /// If incorrect number of signatures or duplicate signatures are supplied,
+    /// signature verification will fail.
+    function receiveMessage(bytes calldata message, bytes calldata attestation) external returns (bool success);
 
-  /// Returns domain of chain on which the contract is deployed.
-  /// @dev immutable
-  function localDomain() external view returns (uint32);
+    /// Returns domain of chain on which the contract is deployed.
+    /// @dev immutable
+    function localDomain() external view returns (uint32);
 
-  /// Returns message format version.
-  /// @dev immutable
-  function version() external view returns (uint32);
+    /// Returns message format version.
+    /// @dev immutable
+    function version() external view returns (uint32);
 }

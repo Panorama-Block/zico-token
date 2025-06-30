@@ -22,19 +22,19 @@ pragma solidity ^0.8.0;
  * @member registrar address of the registrar contract
  */
 struct OnchainConfig {
-  uint32 paymentPremiumPPB;
-  uint32 flatFeeMicroLink; // min 0.000001 LINK, max 4294 LINK
-  uint32 checkGasLimit;
-  uint24 stalenessSeconds;
-  uint16 gasCeilingMultiplier;
-  uint96 minUpkeepSpend;
-  uint32 maxPerformGas;
-  uint32 maxCheckDataSize;
-  uint32 maxPerformDataSize;
-  uint256 fallbackGasPrice;
-  uint256 fallbackLinkPrice;
-  address transcoder;
-  address registrar;
+    uint32 paymentPremiumPPB;
+    uint32 flatFeeMicroLink; // min 0.000001 LINK, max 4294 LINK
+    uint32 checkGasLimit;
+    uint24 stalenessSeconds;
+    uint16 gasCeilingMultiplier;
+    uint96 minUpkeepSpend;
+    uint32 maxPerformGas;
+    uint32 maxCheckDataSize;
+    uint32 maxPerformDataSize;
+    uint256 fallbackGasPrice;
+    uint256 fallbackLinkPrice;
+    address transcoder;
+    address registrar;
 }
 
 /**
@@ -52,16 +52,16 @@ struct OnchainConfig {
  * @member paused freeze on execution scoped to the entire registry
  */
 struct State {
-  uint32 nonce;
-  uint96 ownerLinkBalance;
-  uint256 expectedLinkBalance;
-  uint96 totalPremium;
-  uint256 numUpkeeps;
-  uint32 configCount;
-  uint32 latestConfigBlockNumber;
-  bytes32 latestConfigDigest;
-  uint32 latestEpoch;
-  bool paused;
+    uint32 nonce;
+    uint96 ownerLinkBalance;
+    uint256 expectedLinkBalance;
+    uint96 totalPremium;
+    uint256 numUpkeeps;
+    uint32 configCount;
+    uint32 latestConfigBlockNumber;
+    bytes32 latestConfigDigest;
+    uint32 latestEpoch;
+    bool paused;
 }
 
 /**
@@ -79,73 +79,74 @@ struct State {
  * @member skipSigVerification skip signature verification in transmit for a low security low cost model
  */
 struct UpkeepInfo {
-  address target;
-  uint32 executeGas;
-  bytes checkData;
-  uint96 balance;
-  address admin;
-  uint64 maxValidBlocknumber;
-  uint32 lastPerformBlockNumber;
-  uint96 amountSpent;
-  bool paused;
-  bytes offchainConfig;
+    address target;
+    uint32 executeGas;
+    bytes checkData;
+    uint96 balance;
+    address admin;
+    uint64 maxValidBlocknumber;
+    uint32 lastPerformBlockNumber;
+    uint96 amountSpent;
+    bool paused;
+    bytes offchainConfig;
 }
 
 enum UpkeepFailureReason {
-  NONE,
-  UPKEEP_CANCELLED,
-  UPKEEP_PAUSED,
-  TARGET_CHECK_REVERTED,
-  UPKEEP_NOT_NEEDED,
-  PERFORM_DATA_EXCEEDS_LIMIT,
-  INSUFFICIENT_BALANCE
+    NONE,
+    UPKEEP_CANCELLED,
+    UPKEEP_PAUSED,
+    TARGET_CHECK_REVERTED,
+    UPKEEP_NOT_NEEDED,
+    PERFORM_DATA_EXCEEDS_LIMIT,
+    INSUFFICIENT_BALANCE
 }
 
 interface AutomationRegistryBaseInterface {
-  function registerUpkeep(
-    address target,
-    uint32 gasLimit,
-    address admin,
-    bytes calldata checkData,
-    bytes calldata offchainConfig
-  ) external returns (uint256 id);
+    function registerUpkeep(
+        address target,
+        uint32 gasLimit,
+        address admin,
+        bytes calldata checkData,
+        bytes calldata offchainConfig
+    ) external returns (uint256 id);
 
-  function cancelUpkeep(uint256 id) external;
+    function cancelUpkeep(uint256 id) external;
 
-  function pauseUpkeep(uint256 id) external;
+    function pauseUpkeep(uint256 id) external;
 
-  function unpauseUpkeep(uint256 id) external;
+    function unpauseUpkeep(uint256 id) external;
 
-  function transferUpkeepAdmin(uint256 id, address proposed) external;
+    function transferUpkeepAdmin(uint256 id, address proposed) external;
 
-  function acceptUpkeepAdmin(uint256 id) external;
+    function acceptUpkeepAdmin(uint256 id) external;
 
-  function updateCheckData(uint256 id, bytes calldata newCheckData) external;
+    function updateCheckData(uint256 id, bytes calldata newCheckData) external;
 
-  function addFunds(uint256 id, uint96 amount) external;
+    function addFunds(uint256 id, uint96 amount) external;
 
-  function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external;
+    function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external;
 
-  function setUpkeepOffchainConfig(uint256 id, bytes calldata config) external;
+    function setUpkeepOffchainConfig(uint256 id, bytes calldata config) external;
 
-  function getUpkeep(uint256 id) external view returns (UpkeepInfo memory upkeepInfo);
+    function getUpkeep(uint256 id) external view returns (UpkeepInfo memory upkeepInfo);
 
-  function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[] memory);
+    function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[] memory);
 
-  function getTransmitterInfo(
-    address query
-  ) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee);
+    function getTransmitterInfo(address query)
+        external
+        view
+        returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee);
 
-  function getState()
-    external
-    view
-    returns (
-      State memory state,
-      OnchainConfig memory config,
-      address[] memory signers,
-      address[] memory transmitters,
-      uint8 f
-    );
+    function getState()
+        external
+        view
+        returns (
+            State memory state,
+            OnchainConfig memory config,
+            address[] memory signers,
+            address[] memory transmitters,
+            uint8 f
+        );
 }
 
 /**
@@ -154,32 +155,28 @@ interface AutomationRegistryBaseInterface {
  * if we actually inherit from this interface, so we document it here.
  */
 interface AutomationRegistryInterface is AutomationRegistryBaseInterface {
-  function checkUpkeep(
-    uint256 upkeepId
-  )
-    external
-    view
-    returns (
-      bool upkeepNeeded,
-      bytes memory performData,
-      UpkeepFailureReason upkeepFailureReason,
-      uint256 gasUsed,
-      uint256 fastGasWei,
-      uint256 linkNative
-    );
+    function checkUpkeep(uint256 upkeepId)
+        external
+        view
+        returns (
+            bool upkeepNeeded,
+            bytes memory performData,
+            UpkeepFailureReason upkeepFailureReason,
+            uint256 gasUsed,
+            uint256 fastGasWei,
+            uint256 linkNative
+        );
 }
 
 interface AutomationRegistryExecutableInterface is AutomationRegistryBaseInterface {
-  function checkUpkeep(
-    uint256 upkeepId
-  )
-    external
-    returns (
-      bool upkeepNeeded,
-      bytes memory performData,
-      UpkeepFailureReason upkeepFailureReason,
-      uint256 gasUsed,
-      uint256 fastGasWei,
-      uint256 linkNative
-    );
+    function checkUpkeep(uint256 upkeepId)
+        external
+        returns (
+            bool upkeepNeeded,
+            bytes memory performData,
+            UpkeepFailureReason upkeepFailureReason,
+            uint256 gasUsed,
+            uint256 fastGasWei,
+            uint256 linkNative
+        );
 }

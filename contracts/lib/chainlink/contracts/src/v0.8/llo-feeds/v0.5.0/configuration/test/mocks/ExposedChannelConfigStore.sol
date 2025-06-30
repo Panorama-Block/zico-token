@@ -7,9 +7,9 @@ import {ChannelConfigStore} from "../../ChannelConfigStore.sol";
 // methods/structures so that golang code can access them, and we get
 // reliable type checking on their usage
 contract ExposedChannelConfigStore is ChannelConfigStore {
-  constructor() {}
+    constructor() {}
 
-  function exposedReadChannelDefinitionStates(uint256 donId) public view returns (uint256) {
-    return s_channelDefinitionVersions[donId];
-  }
+    function exposedReadChannelDefinitionStates(uint256 donId) public view returns (uint256) {
+        return s_channelDefinitionVersions[donId];
+    }
 }

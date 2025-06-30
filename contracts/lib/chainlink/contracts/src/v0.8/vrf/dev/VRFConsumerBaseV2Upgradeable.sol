@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-/** ****************************************************************************
+/**
+ *
  * @notice Interface for contracts using VRF randomness
  * *****************************************************************************
  * @dev PURPOSE
@@ -95,7 +96,6 @@ pragma solidity ^0.8.4;
  * @dev responding to the request (however this is not enforced in the contract
  * @dev and so remains effective only in the case of unmodified oracle software).
  */
-
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
@@ -105,54 +105,55 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
  * @dev to create an upgradeable VRF consumer contract.
  */
 abstract contract VRFConsumerBaseV2Upgradeable is Initializable {
-  error OnlyCoordinatorCanFulfill(address have, address want);
-  // solhint-disable-next-line chainlink-solidity/prefix-storage-variables-with-s-underscore
-  address private vrfCoordinator;
+    error OnlyCoordinatorCanFulfill(address have, address want);
+    // solhint-disable-next-line chainlink-solidity/prefix-storage-variables-with-s-underscore
 
-  // See https://github.com/OpenZeppelin/openzeppelin-sdk/issues/37.
-  // Each uint256 covers a single storage slot, see https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html.
-  // solhint-disable-next-line chainlink-solidity/prefix-storage-variables-with-s-underscore
-  uint256[49] private __gap;
+    address private vrfCoordinator;
 
-  /**
-   * @param _vrfCoordinator the VRFCoordinatorV2 address.
-   * @dev See https://docs.chain.link/docs/vrf/v2/supported-networks/ for coordinator
-   * @dev addresses on your preferred network.
-   */
-  // solhint-disable-next-line func-name-mixedcase
-  function __VRFConsumerBaseV2_init(address _vrfCoordinator) internal onlyInitializing {
-    if (_vrfCoordinator == address(0)) {
-      // solhint-disable-next-line gas-custom-errors
-      revert("must give valid coordinator address");
+    // See https://github.com/OpenZeppelin/openzeppelin-sdk/issues/37.
+    // Each uint256 covers a single storage slot, see https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html.
+    // solhint-disable-next-line chainlink-solidity/prefix-storage-variables-with-s-underscore
+    uint256[49] private __gap;
+
+    /**
+     * @param _vrfCoordinator the VRFCoordinatorV2 address.
+     * @dev See https://docs.chain.link/docs/vrf/v2/supported-networks/ for coordinator
+     * @dev addresses on your preferred network.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function __VRFConsumerBaseV2_init(address _vrfCoordinator) internal onlyInitializing {
+        if (_vrfCoordinator == address(0)) {
+            // solhint-disable-next-line gas-custom-errors
+            revert("must give valid coordinator address");
+        }
+
+        vrfCoordinator = _vrfCoordinator;
     }
 
-    vrfCoordinator = _vrfCoordinator;
-  }
+    /**
+     * @notice fulfillRandomness handles the VRF response. Your contract must
+     * @notice implement it. See "SECURITY CONSIDERATIONS" above for important
+     * @notice principles to keep in mind when implementing your fulfillRandomness
+     * @notice method.
+     *
+     * @dev VRFConsumerBaseV2 expects its subcontracts to have a method with this
+     * @dev signature, and will call it once it has verified the proof
+     * @dev associated with the randomness. (It is triggered via a call to
+     * @dev rawFulfillRandomness, below.)
+     *
+     * @param requestId The Id initially returned by requestRandomness
+     * @param randomWords the VRF output expanded to the requested number of words
+     */
+    // solhint-disable-next-line chainlink-solidity/prefix-internal-functions-with-underscore
+    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal virtual;
 
-  /**
-   * @notice fulfillRandomness handles the VRF response. Your contract must
-   * @notice implement it. See "SECURITY CONSIDERATIONS" above for important
-   * @notice principles to keep in mind when implementing your fulfillRandomness
-   * @notice method.
-   *
-   * @dev VRFConsumerBaseV2 expects its subcontracts to have a method with this
-   * @dev signature, and will call it once it has verified the proof
-   * @dev associated with the randomness. (It is triggered via a call to
-   * @dev rawFulfillRandomness, below.)
-   *
-   * @param requestId The Id initially returned by requestRandomness
-   * @param randomWords the VRF output expanded to the requested number of words
-   */
-  // solhint-disable-next-line chainlink-solidity/prefix-internal-functions-with-underscore
-  function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal virtual;
-
-  // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
-  // proof. rawFulfillRandomness then calls fulfillRandomness, after validating
-  // the origin of the call
-  function rawFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) external {
-    if (msg.sender != vrfCoordinator) {
-      revert OnlyCoordinatorCanFulfill(msg.sender, vrfCoordinator);
+    // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
+    // proof. rawFulfillRandomness then calls fulfillRandomness, after validating
+    // the origin of the call
+    function rawFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) external {
+        if (msg.sender != vrfCoordinator) {
+            revert OnlyCoordinatorCanFulfill(msg.sender, vrfCoordinator);
+        }
+        fulfillRandomWords(requestId, randomWords);
     }
-    fulfillRandomWords(requestId, randomWords);
-  }
 }

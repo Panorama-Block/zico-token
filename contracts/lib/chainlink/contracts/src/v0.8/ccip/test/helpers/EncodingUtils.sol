@@ -10,16 +10,12 @@ import {RMNRemote} from "../../rmn/RMNRemote.sol";
 /// and tests because generated wrappers are available.
 // solhint-disable-next-line
 interface EncodingUtils {
-  /// @dev the RMN Report struct is used in integration / E2E tests.
-  function exposeRmnReport(bytes32 rmnReportVersion, RMNRemote.Report memory rmnReport) external;
+    /// @dev the RMN Report struct is used in integration / E2E tests.
+    function exposeRmnReport(bytes32 rmnReportVersion, RMNRemote.Report memory rmnReport) external;
 
-  /// @dev the OCR3Config Config struct is used in integration / E2E tests.
-  function exposeOCR3Config(
-    CCIPHome.OCR3Config[] calldata config
-  ) external view returns (bytes memory);
+    /// @dev the OCR3Config Config struct is used in integration / E2E tests.
+    function exposeOCR3Config(CCIPHome.OCR3Config[] calldata config) external view returns (bytes memory);
 
-  /// @dev used to encode commit reports for onchain transmission.
-  function exposeCommitReport(
-    OffRamp.CommitReport memory commitReport
-  ) external view returns (bytes memory);
+    /// @dev used to encode commit reports for onchain transmission.
+    function exposeCommitReport(OffRamp.CommitReport memory commitReport) external view returns (bytes memory);
 }

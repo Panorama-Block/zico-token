@@ -7,18 +7,16 @@ import {FunctionsResponse} from "../../../dev/v1_X/libraries/FunctionsResponse.s
 /// @title Functions Client Test Harness
 /// @notice Contract to expose internal functions for testing purposes
 contract FunctionsClientHarness is FunctionsClientUpgradeHelper {
-  constructor(address router) FunctionsClientUpgradeHelper(router) {}
+    constructor(address router) FunctionsClientUpgradeHelper(router) {}
 
-  function getRouter_HARNESS() external view returns (address) {
-    return address(i_functionsRouter);
-  }
+    function getRouter_HARNESS() external view returns (address) {
+        return address(i_functionsRouter);
+    }
 
-  function sendRequest_HARNESS(
-    bytes memory data,
-    uint64 subscriptionId,
-    uint32 callbackGasLimit,
-    bytes32 donId
-  ) external returns (bytes32) {
-    return super._sendRequest(data, subscriptionId, callbackGasLimit, donId);
-  }
+    function sendRequest_HARNESS(bytes memory data, uint64 subscriptionId, uint32 callbackGasLimit, bytes32 donId)
+        external
+        returns (bytes32)
+    {
+        return super._sendRequest(data, subscriptionId, callbackGasLimit, donId);
+    }
 }
